@@ -1,0 +1,173 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+  /* background-image: url('background-image.jpg');
+  /* background-size: cover; */
+  /* background-position: center; */
+  background: linear-gradient(to bottom right, #4e54c8, #8f94fb);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+#splashScreen,
+#mainMenu,
+#loggedMenu,
+#highScoresScreen,
+#historyScreen,
+#gameSettingsScreen {
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 80%;
+  max-width: 400px;
+}
+
+#splashScreen h1 {
+  font-size: 3rem;
+}
+
+#splashScreen small {
+  display: block;
+  margin-top: -40px;
+  margin-bottom: 40px;
+}
+
+#mainMenu ul,
+#loggedMenu ul {
+  list-style-type: none;
+  padding: 20px;
+}
+
+#mainMenu ul li,
+#loggedMenu ul li {
+  margin-bottom: 10px;
+}
+
+#mainMenu ul li a,
+#loggedMenu ul li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  padding: 10px 20px;
+  display: block;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+#mainMenu ul li a:hover,
+#loggedMenu ul li a:hover {
+  background-color: #ddd;
+}
+
+button {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#createPlayerScreen {
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 80%; /* Set the width of the div */
+  max-width: 400px; /* Set maximum width */
+}
+
+#createPlayerScreen h1 {
+  font-size: 3rem;
+}
+
+#createPlayerScreen form {
+  margin-top: 20px;
+}
+
+#createPlayerScreen label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#createPlayerScreen input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+#highScoresScreen h1,
+#historyScreen h1,
+#gameSettingsScreen h1 {
+  font-size: 3rem;
+}
+
+#highScoresScreen ul,
+#historyScreen ul {
+  list-style-type: none;
+  padding: 20px;
+}
+
+#highScoresScreen ul li,
+#historyScreen ul li {
+  margin-bottom: 10px;
+}
+
+#gameSettingsScreen form {
+  margin-top: 20px;
+}
+
+#gameSettingsScreen form label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#gameSettingsScreen form input[type="range"],
+#gameSettingsScreen form select {
+  margin-bottom: 10px;
+}
+
+#gameSettingsScreen form button {
+  margin-top: 20px;
+}
+
+button.primary {
+  background-color: #4caf50;
+}
+
+button.secondary {
+  background-color: #af4c4c;
+}
+
+button.primary:hover {
+  background-color: #45a049;
+}
+
+button.secondary:hover {
+  background-color: #a04545;
+}
+
+/* Media Query for responsiveness */
+@media only screen and (max-width: 600px) {
+  #splashScreen,
+  #mainMenu,
+  #loggedMenu {
+    width: 90%;
+    max-width: 100%;
+  }
+}
