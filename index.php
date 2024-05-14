@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div id="splashScreen">
+    <div id="splashScreen" class="screen">
         <!-- Splash screen content -->
         <h1>3DChess Pro</h1>
         <small>by Tobi Adelabu</small>
@@ -51,14 +51,30 @@
         <form id="createPlayerForm">
             <label for="playerName">Player Name</label>
             <input type="text" id="playerName" name="playerName" required>
+            <label for="passCode">Pass Code</label>
+            <input type="text" id="passCode" name="passCode" required>
         </form>
         <button type="submit" class="primary">Create</button>
         <button class="secondary back">Back</button>
     </div>
 
+    
+    <div id="continuePlayerScreen" class="screen" style="display: none;">
+        <!-- Logged in menu content -->
+        <h2>Enter Account</h2>
+        <form id="continuePlayerForm">
+            <label for="playerName">Player Name</label>
+            <input type="text" id="playerName" name="playerName" required>
+            <label for="passCode">Pass Code</label>
+            <input type="text" id="passCode" name="passCode" required>
+        </form>
+        <button type="submit" class="primary">Continue</button>
+        <button class="secondary back">Back</button>
+    </div>
+
     <div id="highScoresScreen" class="screen" style="display: none;">
         <!-- Highscores content -->
-        <h1>High Scores</h1>
+        <h2>High Scores</h2>
         <ul>
             <li>Player 1 - 500</li>
             <li>Player 2 - 400</li>
@@ -69,7 +85,7 @@
 
     <div id="historyScreen" class="screen" style="display: none;">
         <!-- History content -->
-        <h1>Game History</h1>
+        <h2>Game History</h2>
         <ul>
             <li>Game 1 - Player 1 vs Player 2 - Winner: Player 1</li>
             <li>Game 2 - Player 3 vs Player 4 - Winner: Player 4</li>
@@ -79,18 +95,22 @@
 
     <div id="gameSettingsScreen" class="screen" style="display: none;">
         <!-- Game settings content -->
-        <h1>Game Settings</h1>
+        <h2>Game Settings</h2>
         <form>
             <label for="brightness">Brightness:</label>
-            <input type="range" id="brightness" name="brightness" min="0" max="100">
+            <input type="range" id="brightness" name="brightness" min="40" max="90">
             <br>
             <label for="angle">Camera Angle:</label>
             <input type="range" id="angle" name="angle" min="0" max="360">
             <br>
             <label for="boardColor">Chessboard Color:</label>
             <select id="boardColor" name="boardColor">
-                <option value="set1">Set 1</option>
-                <option value="set2">Set 2</option>
+                <option value="set1">Black & White</option>
+            </select>
+            <br>
+            <label for="boardColor">Chess Piece:</label>
+            <select id="chessPieceType" name="chessPieceType">
+                <option value="set1">Regular</option>
             </select>
             <br>
             <label for="difficulty">Difficulty:</label>
