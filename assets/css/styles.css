@@ -12,6 +12,11 @@ body {
   align-items: center;
   box-sizing: border-box;
   font-size: 14px;
+  cursor: url('../images/cursor.png'), auto;
+}
+
+:hover {
+    cursor: url('../images/cursor.png'), auto;
 }
 
 #splashScreen,
