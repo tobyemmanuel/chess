@@ -11,10 +11,11 @@ $database = new databaseClass();
 $db = $database->getConnection();
 
 if(!$db) {
-    responseClass::errorResponse($db['message'], $db['data']);
+    responseClass::errorResponse('Cannot connect to database');
 }
 
 $path = $_GET['path'] ?? "";
+$process = null;
 
 switch ($path) {
     case 'player':
@@ -24,7 +25,7 @@ switch ($path) {
         $process = ['success' => true, 'message' => 'Game Testing', 'data' => null];
         break;
     case 'main':
-        $process = ['success' => true, 'message' => 'Main Testing', 'data' => null];
+        require "routes/main.php";
         break;        
     default:
     $process = null;
@@ -32,9 +33,9 @@ switch ($path) {
 
 if ($process != null) {
     if($process['success'] == true) {
-        responseClass::successResponse($process['message'], $process['data']);
+        responseClass::successResponse($process['message'], $process['data'] ?? null);
     } else {
-        responseClass::errorResponse($process['message'], $process['data']);
+        responseClass::errorResponse($process['message'], $process['data'] ?? null);
     }
 }
 
