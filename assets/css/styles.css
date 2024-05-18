@@ -1,18 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Roboto", sans-serif;
-  /* background-image: url('background-image.jpg');
-  /* background-size: cover; */
-  /* background-position: center; */
-  background: linear-gradient(to bottom right, #4e54c8, #8f94fb);
+  font-family: 'Playfair Display', serif;
+  background: none; 
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
   font-size: 16px;
+  position: relative;
   cursor: url("../images/cursor.png"), auto;
+  overflow: hidden; 
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../images/bg.jpeg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px); 
+  z-index: -1; 
 }
 
 :hover {
@@ -20,6 +35,8 @@ body {
 }
 
 .screen {
+  position: relative; /* Ensure it is above the blurred background */
+  z-index: 1;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.8);
   padding: 30px;
@@ -27,10 +44,20 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   width: 80%;
   max-width: 400px;
+  background-image: url('../images/screen.jpeg');
+  background-size: cover;
+  background-position: center;
 }
+
 
 #splashScreen h1 {
   font-size: 3rem;
+  font-family: 'Playfair Display', serif;
+  color: #8B5A2B;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+  margin: 0;
+  padding: 40px;
 }
 
 #splashScreen small {
@@ -64,20 +91,49 @@ body {
 
 #mainMenu ul li a:hover,
 #loggedMenu ul li a:hover {
-  background-color: #ddd;
+  background-color: #ECE2C6;
 }
 
 button {
   display: inline-block;
   padding: 10px 20px;
-  border: none;
+  border: 2px solid #3e320c;
   border-radius: 5px;
-  color: white;
+  color: #fff;
   text-align: center;
   text-decoration: none;
   font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-family: 'Playfair Display', serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: #d4af37;
+}
+
+button.primary {
+  /* background-color: #d4af37; */
+  background-image: url('../images/button.jpeg');
+  background-size: cover;
+  background-position: center;
+  color: #4a3d11;
+}
+
+button.secondary {
+  background-color: #a08060;
+  color: #fff;
+}
+
+button.primary:hover {
+  background-color: #b9933d;
+  color: #b9982f;
+}
+
+button.secondary:hover {
+  background-color: #8b6c50;
+  color: #fff;
+}
+
+button:active {
+  transform: scale(0.95); 
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); 
 }
 
 #createPlayerScreen {
@@ -86,8 +142,8 @@ button {
   padding: 30px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  width: 80%; /* Set the width of the div */
-  max-width: 400px; /* Set maximum width */
+  width: 80%; 
+  max-width: 400px; 
 }
 
 #createPlayerScreen h1 {
@@ -165,41 +221,29 @@ button {
   box-sizing: border-box;
 }
 
-button.primary {
-  background-color: #4caf50;
-}
-
-button.secondary {
-  background-color: #af4c4c;
-}
-
-button.primary:hover {
-  background-color: #45a049;
-}
-
-button.secondary:hover {
-  background-color: #a04545;
-}
-
 .loading-screen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
-    display: none; /* Initially hidden */
-    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: none; 
+    justify-content: center; 
     align-items: center;
-    z-index: 999; /* Ensure it's on top of other content */
+    z-index: 999999;
 }
 
 .loading-spinner {
-    border: 5px solid #f3f3f3; /* Light grey */
-    border-top: 5px solid #3498db; /* Blue */
+    color: #2b1e05;
+}
+
+.loading-spinner {
+    border: 5px solid #f3f3f3; 
+    border-top: 5px solid #2b1e05; 
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 20px;
+    height: 20px;
     animation: spin 1s linear infinite;
 }
 
@@ -207,6 +251,122 @@ button.secondary:hover {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 16px;
+  font-family: 'Playfair Display', serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+}
+
+.toast.success { 
+  background-color: #4ca761;
+}
+
+.toast.warning { 
+  background-color: #d9b750;
+}
+
+.toast.error { 
+  background-color: #cf606c;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: 'Playfair Display', serif;
+  transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+  border: 2px solid #372616;
+  outline: none;
+}
+
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: 'Playfair Display', serif;
+  transition: border-color 0.3s ease;
+}
+
+input[type="password"]:focus {
+  border: 2px solid #372616;
+  outline: none;
+}
+
+form {
+  width: 100%;
+  margin: 0 auto;
+}
+
+form label {
+  font-family: 'Playfair Display', serif;
+  color: #372616;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+form input[type="range"],
+form select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: 'Playfair Display', serif;
+  background-color: #F8F0E3; 
+  color: #372616;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+form input[type="range"]:focus,
+form select:focus {
+  border: 2px solid #372616; 
+  outline: none; 
+  background-color: #ECE2C6;
+}
+
+form input[type="range"]::-webkit-slider-thumb {
+  background-color: #8B5A2B; 
+}
+
+form input[type="range"]::-moz-range-thumb {
+  background-color: #8B5A2B; 
+}
+
+form input[type="range"]::-ms-thumb {
+  background-color: #8B5A2B; 
+}
+
+form input[type="range"]::-webkit-slider-runnable-track {
+  background-color: #DDD;
+}
+
+form input[type="range"]::-moz-range-track {
+  background-color: #DDD;
+}
+
+form input[type="range"]::-ms-track {
+  background-color: #DDD;
+}
+
 
 /* Media Query for responsiveness */
 @media only screen and (max-width: 600px) {
