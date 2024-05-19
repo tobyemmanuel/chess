@@ -21,10 +21,10 @@ $process = null;
 
 switch ($path) {
     case 'player':
-        $process = ['success' => true, 'message' => 'Player Testing', 'data' => null];
+        require "routes/player.php";
         break;
     case 'game':
-        $process = ['success' => true, 'message' => 'Game Testing', 'data' => null];
+        require "routes/game.php";
         break;
     case 'main':
         require "routes/main.php";

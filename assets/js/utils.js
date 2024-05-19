@@ -54,15 +54,3 @@ function toast(message, type) {
     document.body.removeChild(toastElement);
   }, 3000);
 }
-
-function handleBackButtonClick() {
-    var parentScreen = this.closest(".screen");
-    hideScreen(parentScreen.id);
-    if (this.classList.contains("back_logged")) {
-      showScreen("loggedMenu");
-    } else if (this.classList.contains("back")) {
-      showScreen("mainMenu");
-    }else if (this.classList.contains("exit")) {
-      showScreen("splashScreen");
-    }
-  }
