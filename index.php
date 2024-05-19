@@ -28,6 +28,7 @@
         <h2>Main Menu</h2>
         <ul>
             <li><a href="#" id="continuePlayer">Continue</a></li>
+            <li><a href="#" id="continueGuest">Continue as Guest</a></li>
             <li><a href="#" id="createPlayer">Create Player</a></li>
             <li><a href="#" class="gameSettings">Game Settings</a></li>
             <li><a href="#" class="highScores">High Scores</a></li>
@@ -42,9 +43,10 @@
         <ul>
             <li><a href="#" id="continueGame">Continue Game</a></li>
             <li><a href="#" id="newGame">New Game</a></li>
-            <li><a href="#" class="gameSettings">Game Settings</a></li>
+            <li><a href="#" class="profileSettings">Account</a></li>
             <li><a href="#" class="history">History</a></li>
             <li><a href="#" class="highScores">High Scores</a></li>
+            <li><a href="#" class="gameSettings">Game Settings</a></li>
             <li><a href="#" class="back">Back</a></li>
             <li><a href="#" class="exit">Exit Game</a></li>
         </ul>
@@ -56,8 +58,10 @@
         <form id="createPlayerForm">
             <label for="username">Player Name</label>
             <input type="text" id="username" name="username" required>
+            <label for="email">Player Email</label>
+            <input type="email" id="email" name="email" required>
             <label for="passcode">Pass Code</label>
-            <input type="password" id="passcode" name="passcode" required>
+            <input type="password" class="clearfix" id="passcode" name="passcode" required>
         </form>
         <button type="submit" id="createPlayerAction" class="primary">Create</button>
         <button class="secondary back">Back</button>
@@ -71,12 +75,25 @@
             <label for="username">Player Name</label>
             <input type="text" id="username" name="username" required>
             <label for="passcode">Pass Code</label>
-            <input type="password" id="passcode" name="passcode" required>
+            <input type="password" class="clearfix" id="passcode" name="passcode" required>
         </form>
-        <button type="submit"  id="continuePlayerAction" class="primary">Continue</button>
+        <button type="submit" id="continuePlayerAction" class="primary">Continue</button>
+        <button class="secondary back">Back</button>
+        <a id="forgotPassword" class="forgot-password">Forgot Passcode?</a>
+    </div>
+
+    <div id="forgotPasswordScreen" class="screen" style="display: none;">
+        <!-- Logged in menu content -->
+        <h2>Enter Account</h2>
+        <form id="continuePlayerForm">
+            <label for="email/username">Username/Email</label>
+            <input type="text" id="username" class="clearfix" name="username" required>
+            <p>A new passcode will be sent to your email</p>
+        </form>
+        <button type="submit" id="forgotPasswordAction" class="primary">Continue</button>
         <button class="secondary back">Back</button>
     </div>
-    
+
 
     <div id="highScoresScreen" class="screen" style="display: none;">
         <!-- Highscores content -->
@@ -132,6 +149,66 @@
         <button class="primary">Save</button>
         <button class="logged-in secondary back_logged" id="backToLoggedMenu">Back</button>
         <button class="logged-out secondary back" id="backToMainMenu">Back</button>
+    </div>
+
+    <div id="profileSettingsScreen" class="screen" style="display: none;">
+        <h2>Update Profile</h2>
+        <form id="profileSettingsForm" enctype="multipart/form-data">
+            <div class="form-group profile-group">
+                <img id="profileImagePreview" src="" alt="Profile Image Preview" style="display: none;">
+                <div class="image-upload-container">
+                    <input type="file" class="clearfix" id="profileImage" name="profileImage" accept="image/*" style="display: none;">
+                    <button id="addPhotoButton" class="primary">Add Avatar</button>
+                    <button id="removePhotoButton" class="secondary" style="display: none;">Remove
+                        Photo</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="newUsername">Change Username</label>
+                <input type="text" id="profileUsername" name="profileUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="newEmail">Change Email</label>
+                <input type="text" id="profileEmail" name="profileEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" autocomplete="false" class="clearfix" id="currentPasscode" name="currentPasscode" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password"  autocomplete="false" class="clearfix" id="newPasscode" name="newPasscode" required>
+            </div>
+        </form>
+        <button type="submit" id="profileSettingsAction" class="primary">Save Changes</button>
+        <button class="logged-in secondary back_logged" id="backToLoggedMenu">Back</button>
+    </div>
+
+    <div id="playScreen" class="screen" style="display: none;">
+        <h2>New Game Options</h2>
+        <form id="playOptionsForm">
+            <label for="playMode">Choose your play mode</label>
+            <select id="playMode" name="playMode" required>
+                <option value="ai">Play with AI</option>
+                <option value="random">Play with Random Opponent</option>
+                <option value="user">Play with User</option>
+            </select>
+
+            <div id="usernameField" style="display: none;">
+                <label for="oppUsername">Enter Username:</label>
+                <input type="text" id="oppUsername" class="clearfix" name="oppUsername">
+            </div>
+        </form>
+        <button type="submit" class="primary">Start Game</button>
+        <button class="logged-in secondary back_logged" id="backToMainMenu">Back</button>
+    </div>
+
+    <div class="floating-menu logged-in">
+        <div class="float-info">
+            <div class="avatar"></div>
+            <div class="playerUsername">User</div>
+        </div>
+        <button class="primary">Home</button>
     </div>
 
 

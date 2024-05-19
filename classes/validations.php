@@ -20,4 +20,13 @@ class validations
 
         return [true, "No errors"];
     }
+
+    public static function email($email = null)
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [false, "Invalid email address"];
+        }
+
+        return [true, "No errors"];
+    }
 }
