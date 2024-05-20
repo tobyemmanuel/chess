@@ -44,29 +44,30 @@ class mainClass
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($passcode, $user['passcode'])) {
-            session_set_cookie_params([
-                'lifetime' => 1800,
+            // session_set_cookie_params([
+                // 'lifetime' => 1800,
                 //     'httponly' => true,
                 //     'secure' => true
-            ]);
-            session_start();
+            // ]);
+            // session_start();
             $_SESSION['user_id'] = $user['user_id'];
-
-            return ["success" => true, "message" => "Logged in successfully.", "data" => ["username" => $user['username']]];
+            $avatar =  (!is_null($user['avatar'])) ? 'http://localhost:8001/uploads/'.$user['avatar'] : NULL;
+            return ["success" => true, "message" => "Logged in successfully.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
         }
         return ["success" => false, "message" => "Wrong username or password."];
     }
 
     public function isLoggedIn(): array
     {
-        session_start();
+        // session_start();
         if (isset($_SESSION['user_id'])) {
             $user_id = $_SESSION['user_id'];
             $stmt = $this->conn->prepare("SELECT * FROM players WHERE user_id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user) {
-                return ["success" => true, "message" => "Logged in.", "data" => ["username" => $user['username']]];
+                $avatar =  (!is_null($user['avatar'])) ? 'http://localhost:8001/uploads/'.$user['avatar'] : NULL;
+                return ["success" => true, "message" => "Logged in.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
             }
         }
         ;
@@ -98,7 +99,7 @@ class mainClass
 
     public function logout(): array
     {
-        session_start();
+        // session_start();
         session_unset();
         session_destroy();
         return ["success" => true, "message" => "Logged out successfully."];

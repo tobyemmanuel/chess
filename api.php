@@ -7,7 +7,13 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 require_once 'classes/autoload.php';
 request::getRequestData();
+session_set_cookie_params([
+    'lifetime' => 1800,
+    //     'httponly' => true,
+    //     'secure' => true
+]);
 
+session_start();
 $database = new databaseClass();
 $db = $database->getConnection();
 
@@ -16,14 +22,17 @@ if(!$db) {
     exit;
 }
 
+
 $path = $_GET['path'] ?? "";
 $process = null;
 
 switch ($path) {
     case 'player':
+        authCheck::updateUser($db);
         require "routes/player.php";
         break;
     case 'game':
+        authCheck::updateUser($db);
         require "routes/game.php";
         break;
     case 'main':
@@ -33,7 +42,7 @@ switch ($path) {
     $process = null;
 }
 
-if ($process != null) {
+if (!is_null($process)) {
     if($process['success'] == true) {
         responseClass::successResponse($process['message'], $process['data'] ?? null);
     } else {

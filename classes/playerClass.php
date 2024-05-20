@@ -18,9 +18,11 @@ class playerClass
 
     public function updateProfile(string $username, string $passcode, string $newpasscode, string $email, $avatar): array
     {
-        session_start();
-        $user_id = $_SESSION['user_id'];
-
+        $user_id = validations::checkLogin();
+        if($user_id[0] == false){
+            return ["success" => false, "message" => "User not logged in"]; 
+        }
+        $user_id = $user_id[1];
         $stmt = $this->conn->prepare("SELECT * FROM players WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -90,12 +92,54 @@ class playerClass
 
         if (count($failed) > 0) {
             return ["success" => false, "message" => trim($successMsg . ' ' . $failedMsg)];
-        } 
-        
+        }
+
         return ["success" => true, "message" => $successMsg];
     }
 
+    public function updateGameSettings($camera_angle, $brightness, $difficulty, $chessPieceType, $boardColor)
+    {
+        $user_id = validations::checkLogin();
+        if($user_id[0] == false){
+            return ["success" => false, "message" => "User not logged in"]; 
+        }
+        $user_id = $user_id[1];
+        $valid_settings = validations::settings($camera_angle, $brightness, $difficulty, $chessPieceType, $boardColor);
 
+        if($valid_settings[0] == false){
+            return ["success" => false, "message" => $valid_settings[1]]; 
+        }
+
+        $stmt = $this->conn->prepare("SELECT id FROM player_preferences WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        if ($stmt->rowCount() > 0) {
+            $stmt = $this->conn->prepare("UPDATE player_preferences SET brightness = ?, cameraAngle = ?, boardColour = ?, chesspieceType = ?, difficulty = ? WHERE user_id = ?");
+            $stmt->execute([$brightness, $camera_angle, $boardColor, $chessPieceType, $difficulty, $user_id]);
+        }else{
+            $stmt = $this->conn->prepare("INSERT INTO player_preferences (user_id, brightness, cameraAngle, boardColour, chesspieceType, difficulty) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([ $user_id, $brightness, $camera_angle, $boardColor, $chessPieceType, $difficulty]);
+        }
+
+        return ["success" => true, "message" => "Setting updated"];
+    }
+
+    public function fetchGameSettings()
+    {
+        $user_id = validations::checkLogin();
+        if($user_id[0] == false){
+            return ["success" => false, "message" => "User not logged in"]; 
+        }
+        $user_id = $user_id[1];
+
+
+        $stmt = $this->conn->prepare("SELECT brightness, cameraAngle, boardColour, chesspieceType, difficulty FROM player_preferences WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $user_settings = null;
+        if ($stmt->rowCount() > 0) {
+            $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        return ["success" => true, "message" => "Setting fetched", "data" => $user_settings];
+    }
 
     public function profileImageUpload($file, $user_id)
     {

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3DChess Pro by Tobi</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
     <link rel="stylesheet" href="./assets/css/styles.css">
     <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/png" />
 </head>
@@ -121,20 +121,20 @@
     <div id="gameSettingsScreen" class="screen" style="display: none;">
         <!-- Game settings content -->
         <h2>Game Settings</h2>
-        <form>
+        <form id ="gameSettingsForm">
             <label for="brightness">Brightness:</label>
             <input type="range" id="brightness" name="brightness" min="40" max="90">
             <br>
-            <label for="angle">Camera Angle:</label>
-            <input type="range" id="angle" name="angle" min="0" max="360">
+            <label for="camera_angle">Camera Angle:</label>
+            <input type="range" id="cameraAangle" name="cameraAngle" min="0" max="90">
             <br>
             <label for="boardColor">Chessboard Color:</label>
             <select id="boardColor" name="boardColor">
                 <option value="set1">Black & White</option>
             </select>
             <br>
-            <label for="boardColor">Chess Piece:</label>
-            <select id="chessPieceType" name="chessPieceType">
+            <label for="chesspieceType">Chess Piece:</label>
+            <select id="chesspieceType" name="chesspieceType">
                 <option value="set1">Regular</option>
             </select>
             <br>
@@ -146,7 +146,7 @@
             </select>
             <br>
         </form>
-        <button class="primary">Save</button>
+        <button class="primary" id="gameSettingsAction">Save</button>
         <button class="logged-in secondary back_logged" id="backToLoggedMenu">Back</button>
         <button class="logged-out secondary back" id="backToMainMenu">Back</button>
     </div>
@@ -203,12 +203,19 @@
         <button class="logged-in secondary back_logged" id="backToMainMenu">Back</button>
     </div>
 
-    <div class="floating-menu logged-in">
+    <div id="endGameScreen" class="screen" style="display: none;">
+        <h2>Do you want to end the game?</h2>
+        <input type="hidden" name="endgameid" id="endgameid">
+        <button type="submit" class="primary">Yes</button>
+        <button class="logged-in secondary back_logged" id="backToMainMenu">No</button>
+    </div>
+
+    <div class="floating-menu"  style="display: none;">
         <div class="float-info">
             <div class="avatar"></div>
             <div class="playerUsername">User</div>
         </div>
-        <button class="primary">Home</button>
+        <button class="primary playerQuickButton">Pause</button>
     </div>
 
 
