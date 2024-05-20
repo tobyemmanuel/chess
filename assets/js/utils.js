@@ -54,3 +54,55 @@ function toast(message, type) {
     document.body.removeChild(toastElement);
   }, 3000);
 }
+
+function formDataToObject(formData) {
+  const obj = {};
+  formData.forEach((value, key) => {
+    if (obj[key]) {
+      if (!Array.isArray(obj[key])) {
+        obj[key] = [obj[key]];
+      }
+      obj[key].push(value);
+    } else {
+      obj[key] = value;
+    }
+  });
+  return obj;
+}
+
+function loadFormDataFromLocalStorage() {
+  const storedData = localStorage.getItem("gameSettingsStored");
+  if (storedData) {
+    const gameSettings = JSON.parse(storedData);
+
+    for (const key in gameSettings) {
+      if (gameSettings.hasOwnProperty(key)) {
+        const field = document.querySelector(`[name=${key}]`);
+        if (field) {
+          if (field.type === "checkbox" || field.type === "radio") {
+            field.checked = gameSettings[key];
+          } else {
+            field.value = gameSettings[key];
+          }
+        }
+      }
+    }
+  }
+}
+
+function unloadFormDataToFields(data) {
+  const gameSettings = data.data;
+
+  for (const key in gameSettings) {
+    if (gameSettings.hasOwnProperty(key)) {
+      const field = document.querySelector(`[name=${key}]`);
+      if (field) {
+        if (field.type === "checkbox" || field.type === "radio") {
+          field.checked = gameSettings[key] === "true" ? true : false;
+        } else {
+          field.value = gameSettings[key];
+        }
+      }
+    }
+  }
+}

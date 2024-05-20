@@ -1,8 +1,9 @@
-let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+let gameSettingsStored;
+let isInGame = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-
-//implement a logged in state check upon load completion
+  //implement a logged in state check upon load completion
 
   showScreen("splashScreen");
 
@@ -14,9 +15,9 @@ document.addEventListener("DOMContentLoaded", function () {
       null,
       function (response) {
         if (response.success) {
-        toast(response.message, "success");
-        hideScreen("splashScreen");
-        showScreen("mainMenu");
+          toast(response.message, "success");
+          hideScreen("splashScreen");
+          showScreen("mainMenu");
         } else {
           toast(error.message, "error");
         }
@@ -25,6 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
         toast(error.message, "error");
       }
     );
+    handleIsLoggedSilent();
+    loadFormDataFromLocalStorage();
     hideScreen("splashScreen");
     showScreen("mainMenu");
   }
@@ -35,11 +38,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleContinuePlayerClick() {
-    if(isLoggedIn == false) {
-    hideScreen("mainMenu");
-    showScreen("continuePlayerScreen");
-    }else{
+    if (isLoggedIn == false) {
+      hideScreen("mainMenu");
+      showScreen("continuePlayerScreen");
+    } else {
       handleIsLogged();
+      loadFormDataFromUserPreferences();
     }
   }
 
@@ -77,14 +81,16 @@ document.addEventListener("DOMContentLoaded", function () {
       formData,
       function (response) {
         isLoggedIn = true;
-        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem("isLoggedIn", "true");
+        updateProfileImage(response.data.avatar);
         updateVisibilityBasedOnLoginStatus();
         document.getElementById("loading-screen").style.display = "none";
         toast(response.message, "success");
         hideScreen("continuePlayerScreen");
-        document.querySelector(".welcome-user").innerHTML="Welcome "+response.data.username;
-        document.querySelector(".playerUsername").innerHTML=response.data.username;
-        playerUsername
+        document.querySelector(".welcome-user").innerHTML =
+          "Welcome " + response.data.username;
+        document.querySelector(".playerUsername").innerHTML =
+          response.data.username;
         showScreen("loggedMenu");
       },
       function (error) {
@@ -104,10 +110,16 @@ document.addEventListener("DOMContentLoaded", function () {
       function (response) {
         updateVisibilityBasedOnLoginStatus();
         hideScreen("mainMenu");
-        document.querySelector(".welcome-user").innerHTML="Welcome "+response.data.username;
-        document.querySelector(".playerUsername").innerHTML=response.data.username;
+        document.querySelector(".welcome-user").innerHTML =
+          "Welcome " + response.data.username;
+        document.querySelector(".playerUsername").innerHTML =
+          response.data.username;
         showScreen("loggedMenu");
+        updateProfileImage(response.data.avatar);
         document.getElementById("loading-screen").style.display = "none";
+        document.getElementById("profileUsername").value =
+          response.data.username;
+        document.getElementById("profileEmail").value = response.data.email;
         toast(response.message, "success");
       },
       function (error) {
@@ -119,14 +131,44 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  document.getElementById("startButton").addEventListener("click", handleStartButtonClick);
-  document.getElementById("createPlayer").addEventListener("click", handleCreatePlayerClick);
-  document.getElementById("continuePlayer").addEventListener("click", handleContinuePlayerClick);
-  document.getElementById("newGame").addEventListener("click", handleNewGameClick);
+  function handleIsLoggedSilent() {
+    handleAjaxRequest(
+      "POST",
+      "api.php?path=main&action=isloggedin",
+      [],
+      function (response) {
+        updateVisibilityBasedOnLoginStatus();
+        document.querySelector(".welcome-user").innerHTML =
+          "Welcome " + response.data.username;
+        document.querySelector(".playerUsername").innerHTML =
+          response.data.username;
+        updateProfileImage(response.data.avatar);
+        document.getElementById("profileUsername").value =
+          response.data.username;
+        document.getElementById("profileEmail").value = response.data.email;
+      },
+      function (error) {
+      }
+    );
+  }
+
+  document
+    .getElementById("startButton")
+    .addEventListener("click", handleStartButtonClick);
+  document
+    .getElementById("createPlayer")
+    .addEventListener("click", handleCreatePlayerClick);
+  document
+    .getElementById("continuePlayer")
+    .addEventListener("click", handleContinuePlayerClick);
+  document
+    .getElementById("newGame")
+    .addEventListener("click", handleNewGameClick);
 
   setupClickListener(".back, .back_logged, .exit", handleBackButtonClick);
   setupClickListener(".gameSettings", function () {
     hideScreen(this.closest(".screen").id);
+
     showScreen("gameSettingsScreen");
   });
   setupClickListener(".profileSettings", function () {
@@ -142,22 +184,26 @@ document.addEventListener("DOMContentLoaded", function () {
     showScreen("highScoresScreen");
   });
 
-  document.getElementById("createPlayerAction").addEventListener("click", handleCreatePlayerActionClick);
-  document.getElementById("continuePlayerAction").addEventListener("click", handleContinuePlayerActionClick);
+  document
+    .getElementById("createPlayerAction")
+    .addEventListener("click", handleCreatePlayerActionClick);
+  document
+    .getElementById("continuePlayerAction")
+    .addEventListener("click", handleContinuePlayerActionClick);
 
   function updateVisibilityBasedOnLoginStatus() {
     if (isLoggedIn) {
-      document.querySelectorAll(".logged-in").forEach(function(element) {
+      document.querySelectorAll(".logged-in").forEach(function (element) {
         element.style.display = "inline-block";
       });
-      document.querySelectorAll(".logged-out").forEach(function(element) {
+      document.querySelectorAll(".logged-out").forEach(function (element) {
         element.style.display = "none";
       });
     } else {
-      document.querySelectorAll(".logged-in").forEach(function(element) {
+      document.querySelectorAll(".logged-in").forEach(function (element) {
         element.style.display = "none";
       });
-      document.querySelectorAll(".logged-out").forEach(function(element) {
+      document.querySelectorAll(".logged-out").forEach(function (element) {
         element.style.display = "inline-block";
       });
     }
@@ -172,8 +218,8 @@ document.addEventListener("DOMContentLoaded", function () {
       showScreen("loggedMenu");
     } else if (this.classList.contains("back")) {
       showScreen("mainMenu");
-    }else if (this.classList.contains("exit")) {
-      if(isLoggedIn === true) {
+    } else if (this.classList.contains("exit")) {
+      if (isLoggedIn === true) {
         handleExitAction();
       }
       showScreen("splashScreen");
@@ -188,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
       null,
       function (response) {
         isLoggedIn = false;
-        localStorage.setItem('isLoggedIn', 'false');
+        localStorage.setItem("isLoggedIn", "false");
         updateVisibilityBasedOnLoginStatus();
         document.getElementById("loading-screen").style.display = "none";
         toast(response.message, "success");
@@ -200,42 +246,78 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  document.getElementById("profileSettingsAction").addEventListener("click", handleProfileSettingsAction);
+  document
+    .getElementById("profileSettingsAction")
+    .addEventListener("click", handleProfileSettingsAction);
+
+  document
+    .getElementById("gameSettingsAction")
+    .addEventListener("click", handleGameSettingsAction);
 
   const profileImageInput = document.getElementById("profileImage");
-    const profileImagePreview = document.getElementById("profileImagePreview");
-    const addPhotoButton = document.getElementById("addPhotoButton");
-    const removePhotoButton = document.getElementById("removePhotoButton");
+  const profileImagePreview = document.getElementById("profileImagePreview");
+  const avatar = document.querySelector(".avatar");
+  const addPhotoButton = document.getElementById("addPhotoButton");
+  const removePhotoButton = document.getElementById("removePhotoButton");
 
-    addPhotoButton.addEventListener("click", function() {
-        profileImageInput.click();
-    });
+  addPhotoButton.addEventListener("click", function () {
+    profileImageInput.click();
+  });
 
-    profileImageInput.addEventListener("change", function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                profileImagePreview.src = event.target.result;
-                profileImagePreview.style.display = "block";
-                addPhotoButton.style.display = "none";
-                removePhotoButton.style.display = "inline-block";
-            };
-            reader.readAsDataURL(file); 
-        }
-    });
+  function updateProfileImage(filePath = null) {
+    if (filePath) {
+      if (typeof filePath === "string") {
+        profileImagePreview.src = filePath;
+        const img = document.createElement("img");
+        img.src = filePath;
+        avatar.innerHTML = "";
+        avatar.append(img);
+        addPhotoButton.style.display = "none";
+        profileImagePreview.style.display = "block";
+        removePhotoButton.style.display = "inline-block";
+      } else if (filePath instanceof File) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          profileImagePreview.src = event.target.result;
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          avatar.innerHTML = "";
+          avatar.append(img);
+          profileImagePreview.style.display = "block";
+          removePhotoButton.style.display = "inline-block";
+        };
+        reader.readAsDataURL(filePath);
+      }
+    }
+  }
 
-    removePhotoButton.addEventListener("click", function() {
-        profileImageInput.value = "";
-        profileImagePreview.src = "";
-        profileImagePreview.style.display = "none";
-        removePhotoButton.style.display = "none";
-        addPhotoButton.style.display = "inline-block";
-    });
+  profileImageInput.addEventListener("change", function () {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        profileImagePreview.src = event.target.result;
+        profileImagePreview.style.display = "block";
+        addPhotoButton.style.display = "none";
+        removePhotoButton.style.display = "inline-block";
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  removePhotoButton.addEventListener("click", function () {
+    profileImageInput.value = "";
+    profileImagePreview.src = "";
+    profileImagePreview.style.display = "none";
+    removePhotoButton.style.display = "none";
+    addPhotoButton.style.display = "inline-block";
+  });
 
   function handleProfileSettingsAction(event) {
     event.preventDefault();
-    const formData = new FormData(document.getElementById("profileSettingsForm"));
+    const formData = new FormData(
+      document.getElementById("profileSettingsForm")
+    );
 
     handleAjaxRequest(
       "POST",
@@ -255,56 +337,113 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
+  function handleGameSettingsAction(event) {
+    event.preventDefault();
+    const formData = new FormData(document.getElementById("gameSettingsForm"));
+    const formDataObject = formDataToObject(formData);
+    const formDataJsonString = JSON.stringify(formDataObject);
+
+    localStorage.setItem("gameSettingsStored", formDataJsonString);
+    if (isLoggedIn == true) {
+      handleAjaxRequest(
+        "POST",
+        "api.php?path=player&action=updategamesettings",
+        formData,
+        function (response) {
+          if (response.success) {
+            toast(response.message, "success");
+          } else {
+            toast(response.message, "error");
+          }
+        },
+        function (error) {
+          toast("An error occurred while processing the request.", "error");
+        }
+      );
+    }
+  }
+
+  function loadFormDataFromUserPreferences() {
+    handleAjaxRequest(
+      "POST",
+      "api.php?path=player&action=fetchgamesettings",
+      [],
+      function (response) {
+        if (response.success) {
+          localStorage.setItem(
+            "gameSettingsStored",
+            JSON.stringify(response.data)
+          );
+          unloadFormDataToFields(response.data);
+        }
+      },
+      function (error) {
+        // toast("An error occurred while processing the request.", "error");
+      }
+    );
+  }
+
   const playModeSelect = document.getElementById("playMode");
   const usernameField = document.getElementById("usernameField");
 
   playModeSelect.addEventListener("change", function () {
-      if (this.value === "user") {
-          usernameField.style.display = "block";
-      } else {
-          usernameField.style.display = "none";
-      }
+    if (this.value === "user") {
+      usernameField.style.display = "block";
+    } else {
+      usernameField.style.display = "none";
+    }
   });
 
-  document.getElementById("playOptionsForm").addEventListener("submit", function (event) {
-    event.preventDefault();
+  document
+    .getElementById("playOptionsForm")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
 
-    const playMode = playModeSelect.value;
-    const username = document.getElementById("username").value;
+      const playMode = playModeSelect.value;
+      const username = document.getElementById("username").value;
 
-    // Show loading screen
-    document.getElementById("loading-screen").style.display = "flex";
+      // Show loading screen
+      document.getElementById("loading-screen").style.display = "flex";
 
-    let postData = {
+      let postData = {
         playMode: playMode,
-    };
+      };
 
-    if (playMode === "user") {
+      if (playMode === "user") {
         postData.username = username;
-    }
+      }
 
-    handleAjaxRequest(
+      handleAjaxRequest(
         "POST",
         "api.php?path=game&action=start",
         postData,
         function (response) {
-            // Hide loading screen
-            document.getElementById("loading-screen").style.display = "none";
+          // Hide loading screen
+          document.getElementById("loading-screen").style.display = "none";
 
-            if (response.success) {
-                toast(response.message, "success");
-                // Navigate to game screen, passing game information
-                // This part may involve more detailed game logic
-            } else {
-                toast(response.message, "error");
-            }
+          if (response.success) {
+            toast(response.message, "success");
+            // Navigate to game screen, passing game information
+            // This part may involve more detailed game logic
+          } else {
+            toast(response.message, "error");
+          }
         },
         function (error) {
-            document.getElementById("loading-screen").style.display = "none";
-            toast("An error occurred while starting the game.", "error");
+          document.getElementById("loading-screen").style.display = "none";
+          toast("An error occurred while starting the game.", "error");
         }
-    );
-});
+      );
+    });
 
+  function toggleFloatingMenu(isInGame) {
+    const floatingMenu = document.querySelector(".floating-menu");
+    if (isInGame) {
+      floatingMenu.style.display = "flex";
+    } else {
+      floatingMenu.style.display = "none";
+    }
+  }
 
+  toggleFloatingMenu(isInGame);
 });
