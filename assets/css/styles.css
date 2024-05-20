@@ -1,9 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap");
 
+/* Define the local font-face */
+@font-face {
+  font-family: 'Playfair Display Local';
+  src: url('../fonts/font.woff2') format('woff2');
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Playfair Display", serif;
+  font-family: "Playfair Display", "Playfair Display Local", serif;
   background: none;
   height: 100vh;
   display: flex;
@@ -410,6 +416,11 @@ a.forgot-password:hover {
   flex-direction: column;
   align-items: flex-end;
   justify-items: center;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  max-width: 150px;
 }
 
 .float-info {
@@ -424,12 +435,32 @@ a.forgot-password:hover {
   height: 50px;
   background-color: #ccc; /* Placeholder color */
   border-radius: 50%;
-  margin: 0 10px;
+  margin: 0 auto;
+}
+
+.avatar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
 }
 
 .playerUsername {
   font-weight: bold;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 130px;
+  min-width: 100px;
+}
+
+.playerQuickButton {
+  margin: 0 auto;
+  display: block;
+}
+
+.profile-group {
+  margin-bottom: 10px;
 }
 
 /* Media Query for responsiveness */
