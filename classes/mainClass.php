@@ -51,7 +51,7 @@ class mainClass
             // ]);
             // session_start();
             $_SESSION['user_id'] = $user['user_id'];
-            $avatar =  (!is_null($user['avatar'])) ? 'http://localhost:8001/uploads/'.$user['avatar'] : NULL;
+            $avatar =  (!is_null($user['avatar'])) ? 'uploads/'.$user['avatar'] : NULL;
             return ["success" => true, "message" => "Logged in successfully.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
         }
         return ["success" => false, "message" => "Wrong username or password."];
@@ -66,7 +66,7 @@ class mainClass
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user) {
-                $avatar =  (!is_null($user['avatar'])) ? 'http://localhost:8001/uploads/'.$user['avatar'] : NULL;
+                $avatar =  (!is_null($user['avatar'])) ? 'uploads/'.$user['avatar'] : NULL;
                 return ["success" => true, "message" => "Logged in.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
             }
         }

@@ -8,6 +8,14 @@
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
     <link rel="stylesheet" href="./assets/css/styles.css">
     <link rel="shortcut icon" href="./assets/images/favicon.png" type="image/png" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./assets/plugins/three.js-master/build/three.module.js",
+          "three/addons/": "./assets/plugins/three.js-master/examples/jsm/"
+        }
+      }
+    </script>
 </head>
 
 <body>
@@ -121,7 +129,7 @@
     <div id="gameSettingsScreen" class="screen" style="display: none;">
         <!-- Game settings content -->
         <h2>Game Settings</h2>
-        <form id ="gameSettingsForm">
+        <form id="gameSettingsForm">
             <label for="brightness">Brightness:</label>
             <input type="range" id="brightness" name="brightness" min="40" max="90">
             <br>
@@ -157,7 +165,8 @@
             <div class="form-group profile-group">
                 <img id="profileImagePreview" src="" alt="Profile Image Preview" style="display: none;">
                 <div class="image-upload-container">
-                    <input type="file" class="clearfix" id="profileImage" name="profileImage" accept="image/*" style="display: none;">
+                    <input type="file" class="clearfix" id="profileImage" name="profileImage" accept="image/*"
+                        style="display: none;">
                     <button id="addPhotoButton" class="primary">Add Avatar</button>
                     <button id="removePhotoButton" class="secondary" style="display: none;">Remove
                         Photo</button>
@@ -173,11 +182,13 @@
             </div>
             <div class="form-group">
                 <label for="currentPassword">Current Password</label>
-                <input type="password" autocomplete="false" class="clearfix" id="currentPasscode" name="currentPasscode" required>
+                <input type="password" autocomplete="false" class="clearfix" id="currentPasscode" name="currentPasscode"
+                    required>
             </div>
             <div class="form-group">
                 <label for="newPassword">New Password</label>
-                <input type="password"  autocomplete="false" class="clearfix" id="newPasscode" name="newPasscode" required>
+                <input type="password" autocomplete="false" class="clearfix" id="newPasscode" name="newPasscode"
+                    required>
             </div>
         </form>
         <button type="submit" id="profileSettingsAction" class="primary">Save Changes</button>
@@ -199,7 +210,7 @@
                 <input type="text" id="oppUsername" class="clearfix" name="oppUsername">
             </div>
         </form>
-        <button type="submit" class="primary">Start Game</button>
+        <button type="submit" class="primary" id="playOptionsAction">Start Game</button>
         <button class="logged-in secondary back_logged" id="backToMainMenu">Back</button>
     </div>
 
@@ -210,7 +221,7 @@
         <button class="logged-in secondary back_logged" id="backToMainMenu">No</button>
     </div>
 
-    <div class="floating-menu"  style="display: none;">
+    <div class="floating-menu inGameMode" style="display: none;">
         <div class="float-info">
             <div class="avatar"></div>
             <div class="playerUsername">User</div>
@@ -218,9 +229,23 @@
         <button class="primary playerQuickButton">Pause</button>
     </div>
 
+    <div class="floatingRightBar inGameMode" style="display: none;">
+        <div class="floatRightBarInfo">
+            <div class="icon" id="rotateBoard"><img src="assets/images/rotate_button.jpg"/></div>
+            <div class="icon"><img src="assets/images/white_piece_button.jpg"/></div>
+            <div class="icon"><img src="assets/images/white_piece_button.jpg"/></div>
+            <div class="icon"><img src="assets/images/black_piece_button.jpg"/></div>
+            <div class="icon"><img src="assets/images/exit_button.jpg"/></div>
+        </div>
+    </div>
 
-    <script src="./assets/js/main.js"></script>
+
+    <div class="gameContainer" id="gameContainer" style="display: none;">
+    </div>
+
+    <script type="module" src="./assets/js/main.js"></script>
     <script src="./assets/js/utils.js"></script>
+    <script type="module" src="./assets/js/chessGame.js"></script>
 </body>
 
 </html>

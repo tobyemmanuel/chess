@@ -1,11 +1,67 @@
+import { chessGame } from './chessGame.js';
+
 let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 let gameSettingsStored;
 let isInGame = false;
 
-document.addEventListener("DOMContentLoaded", function () {
-  //implement a logged in state check upon load completion
+const profileImageInput = document.getElementById("profileImage");
+const profileImagePreview = document.getElementById("profileImagePreview");
+const avatar = document.querySelector(".avatar");
+const addPhotoButton = document.getElementById("addPhotoButton");
+const removePhotoButton = document.getElementById("removePhotoButton");
+const playModeSelect = document.getElementById("playMode");
+const usernameField = document.getElementById("usernameField");
 
+document.addEventListener("DOMContentLoaded", function () {
+  //start
   showScreen("splashScreen");
+
+  document
+    .getElementById("startButton")
+    .addEventListener("click", handleStartButtonClick);
+  document
+    .getElementById("createPlayer")
+    .addEventListener("click", handleCreatePlayerClick);
+  document
+    .getElementById("continuePlayer")
+    .addEventListener("click", handleContinuePlayerClick);
+  document
+    .getElementById("newGame")
+    .addEventListener("click", handleNewGameClick);
+  document
+    .getElementById("createPlayerAction")
+    .addEventListener("click", handleCreatePlayerActionClick);
+  document
+    .getElementById("continuePlayerAction")
+    .addEventListener("click", handleContinuePlayerActionClick);
+  document
+    .getElementById("profileSettingsAction")
+    .addEventListener("click", handleProfileSettingsAction);
+  document
+    .getElementById("gameSettingsAction")
+    .addEventListener("click", handleGameSettingsAction);
+  document
+    .getElementById("playOptionsAction")
+    .addEventListener("click", handlePlayModeSelection);
+
+  setupClickListener(".back, .back_logged, .exit", handleBackButtonClick);
+  setupClickListener(".gameSettings", function () {
+    hideScreen(this.closest(".screen").id);
+
+    showScreen("gameSettingsScreen");
+  });
+  setupClickListener(".profileSettings", function () {
+    hideScreen(this.closest(".screen").id);
+    showScreen("profileSettingsScreen");
+  });
+  setupClickListener(".history", function () {
+    hideScreen(this.closest(".screen").id);
+    showScreen("historyScreen");
+  });
+  setupClickListener(".highScores", function () {
+    hideScreen(this.closest(".screen").id);
+    showScreen("highScoresScreen");
+  });
 
   function handleStartButtonClick() {
     document.getElementById("loading-screen").style.display = "flex";
@@ -16,20 +72,20 @@ document.addEventListener("DOMContentLoaded", function () {
       function (response) {
         if (response.success) {
           toast(response.message, "success");
+          handleIsLoggedSilent();
+          loadFormDataFromLocalStorage();
           hideScreen("splashScreen");
           showScreen("mainMenu");
         } else {
           toast(error.message, "error");
+          document.getElementById("loading-screen").style.display = "none";
         }
       },
       function (error) {
         toast(error.message, "error");
+        document.getElementById("loading-screen").style.display = "none";
       }
     );
-    handleIsLoggedSilent();
-    loadFormDataFromLocalStorage();
-    hideScreen("splashScreen");
-    showScreen("mainMenu");
   }
 
   function handleCreatePlayerClick() {
@@ -147,49 +203,9 @@ document.addEventListener("DOMContentLoaded", function () {
           response.data.username;
         document.getElementById("profileEmail").value = response.data.email;
       },
-      function (error) {
-      }
+      function (error) {}
     );
   }
-
-  document
-    .getElementById("startButton")
-    .addEventListener("click", handleStartButtonClick);
-  document
-    .getElementById("createPlayer")
-    .addEventListener("click", handleCreatePlayerClick);
-  document
-    .getElementById("continuePlayer")
-    .addEventListener("click", handleContinuePlayerClick);
-  document
-    .getElementById("newGame")
-    .addEventListener("click", handleNewGameClick);
-
-  setupClickListener(".back, .back_logged, .exit", handleBackButtonClick);
-  setupClickListener(".gameSettings", function () {
-    hideScreen(this.closest(".screen").id);
-
-    showScreen("gameSettingsScreen");
-  });
-  setupClickListener(".profileSettings", function () {
-    hideScreen(this.closest(".screen").id);
-    showScreen("profileSettingsScreen");
-  });
-  setupClickListener(".history", function () {
-    hideScreen(this.closest(".screen").id);
-    showScreen("historyScreen");
-  });
-  setupClickListener(".highScores", function () {
-    hideScreen(this.closest(".screen").id);
-    showScreen("highScoresScreen");
-  });
-
-  document
-    .getElementById("createPlayerAction")
-    .addEventListener("click", handleCreatePlayerActionClick);
-  document
-    .getElementById("continuePlayerAction")
-    .addEventListener("click", handleContinuePlayerActionClick);
 
   function updateVisibilityBasedOnLoginStatus() {
     if (isLoggedIn) {
@@ -208,8 +224,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   }
-
-  updateVisibilityBasedOnLoginStatus();
 
   function handleBackButtonClick() {
     var parentScreen = this.closest(".screen");
@@ -245,20 +259,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     );
   }
-
-  document
-    .getElementById("profileSettingsAction")
-    .addEventListener("click", handleProfileSettingsAction);
-
-  document
-    .getElementById("gameSettingsAction")
-    .addEventListener("click", handleGameSettingsAction);
-
-  const profileImageInput = document.getElementById("profileImage");
-  const profileImagePreview = document.getElementById("profileImagePreview");
-  const avatar = document.querySelector(".avatar");
-  const addPhotoButton = document.getElementById("addPhotoButton");
-  const removePhotoButton = document.getElementById("removePhotoButton");
 
   addPhotoButton.addEventListener("click", function () {
     profileImageInput.click();
@@ -383,8 +383,46 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  const playModeSelect = document.getElementById("playMode");
-  const usernameField = document.getElementById("usernameField");
+  function handlePlayModeSelection(event) {
+    event.preventDefault();
+
+    const playMode = playModeSelect.value;
+    const username = document.getElementById("username").value;
+
+    document.getElementById("loading-screen").style.display = "flex";
+
+    let postData = {
+      playMode: playMode,
+    };
+
+    if (playMode === "user") {
+      postData.username = username;
+    }
+
+    handleAjaxRequest(
+      "POST",
+      "api.php?path=game&action=start",
+      postData,
+      function (response) {
+        document.getElementById("loading-screen").style.display = "none";
+
+        if (response.success) {
+          toast(response.message, "success");
+          document.getElementById("playScreen").style.display = "none";
+          //bring in chess logic here
+          new chessGame(response.data);
+          isInGame = true;
+          toggleFloatingMenu();
+        } else {
+          toast(response.message, "error");
+        }
+      },
+      function (error) {
+        document.getElementById("loading-screen").style.display = "none";
+        toast("An error occurred while starting the game.", "error");
+      }
+    );
+  }
 
   playModeSelect.addEventListener("change", function () {
     if (this.value === "user") {
@@ -394,56 +432,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  document
-    .getElementById("playOptionsForm")
-    .addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const playMode = playModeSelect.value;
-      const username = document.getElementById("username").value;
-
-      // Show loading screen
-      document.getElementById("loading-screen").style.display = "flex";
-
-      let postData = {
-        playMode: playMode,
-      };
-
-      if (playMode === "user") {
-        postData.username = username;
-      }
-
-      handleAjaxRequest(
-        "POST",
-        "api.php?path=game&action=start",
-        postData,
-        function (response) {
-          // Hide loading screen
-          document.getElementById("loading-screen").style.display = "none";
-
-          if (response.success) {
-            toast(response.message, "success");
-            // Navigate to game screen, passing game information
-            // This part may involve more detailed game logic
-          } else {
-            toast(response.message, "error");
-          }
-        },
-        function (error) {
-          document.getElementById("loading-screen").style.display = "none";
-          toast("An error occurred while starting the game.", "error");
+  function toggleFloatingMenu() {
+    const floatingMenus = document.querySelectorAll(".inGameMode");
+    floatingMenus.forEach(floatingMenu => {
+        if (isInGame) {
+            floatingMenu.style.display = "flex";
+        } else {
+            floatingMenu.style.display = "none";
         }
-      );
     });
+}
 
-  function toggleFloatingMenu(isInGame) {
-    const floatingMenu = document.querySelector(".floating-menu");
-    if (isInGame) {
-      floatingMenu.style.display = "flex";
-    } else {
-      floatingMenu.style.display = "none";
-    }
-  }
 
-  toggleFloatingMenu(isInGame);
+  updateVisibilityBasedOnLoginStatus();
+
+  toggleFloatingMenu();
 });
