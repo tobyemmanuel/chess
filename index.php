@@ -231,14 +231,22 @@
 
     <div class="floatingRightBar inGameMode" style="display: none;">
         <div class="floatRightBarInfo">
-            <div class="icon" id="rotateBoard"><img src="assets/images/rotate_button.jpg"/></div>
-            <div class="icon"><img src="assets/images/white_piece_button.jpg"/></div>
-            <div class="icon"><img src="assets/images/white_piece_button.jpg"/></div>
-            <div class="icon"><img src="assets/images/black_piece_button.jpg"/></div>
-            <div class="icon"><img src="assets/images/exit_button.jpg"/></div>
+            <div class="icon tooltip tooltip-left" id="rotateBoard" title="Rotate the chessboard"><img src="assets/images/rotate_button.jpg"/></div>
+            <div class="icon tooltip tooltip-left" title = "Your Turn"><img class="pulsate" src="assets/images/white_piece_button.jpg"/></div>
+            <div class="icon tooltip tooltip-left" title = "White's knockouts"><img src="assets/images/white_piece_button.jpg"/><span class="badge">3</span></div>
+            <div class="icon tooltip tooltip-left" title = "Black's knockouts"><img src="assets/images/black_piece_button.jpg"/><span class="badge">3</span></div>
+            <div class="icon tooltip tooltip-left exit" title = "Exit game"><img src="assets/images/exit_button.jpg"/></div>
         </div>
     </div>
 
+    <div class="opponent inGameMode" style="display: none;">
+        <div class="opponentBarInfo">
+            <div class="msg-text">Playing with AI</div>
+            <div class="msg tooltip tooltip-bottom" title="Toggle Guidance"><img src="assets/images/guide.png"/></div>
+            <div class="msg tooltip tooltip-bottom" title = "Game Rules"><img src="assets/images/rules.png"/></div>
+            <div class="msg tooltip tooltip-bottom" title="Game settings"><img src="assets/images/settings.png"/></div>
+        </div>
+    </div>
 
     <div class="gameContainer" id="gameContainer" style="display: none;">
     </div>
