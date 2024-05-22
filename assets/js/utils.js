@@ -106,3 +106,18 @@ function unloadFormDataToFields(data) {
     }
   }
 }
+
+function playSelectSound() {
+  let select = new Audio("assets/sounds/button-press.ogg");
+  select.play();
+}
+
+function playDeselectSound() {
+  let deselect = new Audio("assets/sounds/button-release.ogg");
+  deselect.play();
+}
+
+function playKnockSound() {
+  let knockout = new Audio("assets/sounds/ping_pong.mp3");
+  knockout.play();
+}

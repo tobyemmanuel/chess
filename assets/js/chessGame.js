@@ -2,6 +2,26 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const fragmentShader = `
+  varying vec2 vUv;
+  void main() {
+    vec3 color = mix(vec3(1.0, 1.0, 1.0), vec3(0.56, 0.93, 0.56), vUv.y);
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+const gradientMaterial = new THREE.ShaderMaterial({
+  vertexShader,
+  fragmentShader,
+});
 export class chessGame {
   // gameId, players, settings, gameData = null
   constructor(gameData) {
@@ -447,6 +467,10 @@ export class chessGame {
     return `R${row + 1}C${col + 1}`;
   }
 
+  getSquareIdRaw(col, row) {
+    return `${col},${row}`;
+  }
+
   findPieceOnSquare(square) {
     const piecesArray = Object.values(this.chessPieces);
     for (const onePiece of piecesArray) {
@@ -457,25 +481,61 @@ export class chessGame {
     return false;
   }
 
+  findPieceSquare(piece) {
+    return piece.userData.currentPosition;
+  }
+
+  checkValidMoves(targetSquareId, possibleMoves) {
+    return possibleMoves.includes(targetSquareId);
+  }
   movePiece(piece, targetSquareData) {
+    console.log("move piece", targetSquareData);
     const targetSquare = this.getSquareById(targetSquareData.id);
     const pieceOnSquare = this.findPieceOnSquare(targetSquare.name);
 
-    if (pieceOnSquare && piece.userData.color != pieceOnSquare.userData.color) {
-      this.capturePiece(targetSquare.userData.occupant);
-    }
-    //targetSquare.userData.occupant
+    let action = false;
+    const possibleMoves = this.getPiecePossibleMoves(this.selectedPiece);
+    const checkValidMoves = this.checkValidMoves(
+      targetSquareData.id,
+      possibleMoves
+    );
 
-    if (
-      pieceOnSquare == false ||
-      piece.userData.color != pieceOnSquare.userData.color
-    ) {
+    if (checkValidMoves) {
+      if (
+        action == false &&
+        pieceOnSquare &&
+        piece.userData.color != pieceOnSquare.userData.color
+      ) {
+        this.capturePiece(pieceOnSquare.userData);
+        toast("e chop person " + pieceOnSquare.userData.name, "success");
+        // this.capturePiece(targetSquare.userData.occupant);
+        action = true;
+      }
+
+      if (
+        (action == false &&
+          this.selectedPiece != null &&
+          pieceOnSquare == false) ||
+        (action == false &&
+          piece.userData.color != pieceOnSquare.userData.color)
+      ) {
+        toast(
+          "e no chop anything, na just movement to " + targetSquareData.id,
+          "success"
+        );
+        action = true;
+      }
+    } else {
+      toast("Dey play", "error");
+    }
+    if (action == true) {
       piece.position.set(
         targetSquareData.middlePoint.x,
         this.boardHeight,
         targetSquareData.middlePoint.z
       );
-
+      this.revertHighlight(possibleMoves);
+      playKnockSound();
       this.placePieceOnSquare(piece, targetSquareData.id, true);
       this.revertPieceColor();
       this.selectedPiece = null;
@@ -518,9 +578,7 @@ export class chessGame {
       if (userData.type === "piece") {
         this.handlePieceClick(intersectedObject);
       } else if (userData.type === "square") {
-        // if (this.selectedPiece) {
         this.handleSquareClick(userData);
-        // }
       }
     }
   }
@@ -528,10 +586,22 @@ export class chessGame {
   handlePieceClick(piece) {
     if (this.selectedPiece == null) {
       this.selectPiece(piece);
+      let possibleMoves = this.getPiecePossibleMoves(piece);
+      this.highlightPossibleMoves(possibleMoves);
     } else if (this.selectedPiece == piece) {
+      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight(previousMoves);
       this.deselectPiece();
-    } else {
+    } else if (this.selectedPiece.userData.color == piece.userData.color) {
+      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight(previousMoves);
       this.changeSelectedPiece(piece);
+      let possibleMoves = this.getPiecePossibleMoves(piece);
+      this.highlightPossibleMoves(possibleMoves);
+    } else {
+      let squarePiece = this.findPieceSquare(piece);
+      let squareData = this.getSquareById(squarePiece);
+      this.movePiece(this.selectedPiece, squareData.userData);
     }
   }
 
@@ -540,48 +610,250 @@ export class chessGame {
 
     if (pieceOnSquare && this.selectedPiece == null) {
       this.selectPiece(pieceOnSquare);
+      let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
+      this.highlightPossibleMoves(possibleMoves);
     } else if (pieceOnSquare && this.selectedPiece == pieceOnSquare) {
+      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight(previousMoves);
       this.deselectPiece();
     } else if (
       pieceOnSquare &&
       this.selectedPiece.userData.color == pieceOnSquare.userData.color
     ) {
+      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight(previousMoves);
       this.changeSelectedPiece(pieceOnSquare);
+      let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
+      this.highlightPossibleMoves(possibleMoves);
     } else if (this.selectedPiece) {
-      toast("e chop am", "success");
       this.movePiece(this.selectedPiece, squareData);
     }
   }
 
   selectPiece(piece) {
+    playSelectSound();
     this.selectedPiece = piece;
+    this.selectedPiece.originalMaterial = this.selectedPiece.material;
     this.selectedPiece.material = new THREE.MeshStandardMaterial({
       color: 0xefe4b0,
     });
   }
 
   deselectPiece() {
+    playDeselectSound();
     this.revertPieceColor();
     this.selectedPiece = null;
   }
 
   changeSelectedPiece(piece) {
+    playSelectSound();
     piece.material = new THREE.MeshStandardMaterial({ color: 0xefe4b0 });
     this.revertPieceColor();
     this.selectedPiece = piece;
   }
 
   revertPieceColor() {
-    // console.log("revertPieceColor", this.selectedPiece);
-
-    // I will load up initial material state of chess piece into a object upon init for future reference
-    // this.selectedPiece.material = this.selectedPiece.originalMaterial;
-    let originalColor =
-      this.selectedPiece.userData.color === "W" ? 0xffffff : 0x000000;
-    this.selectedPiece.material = new THREE.MeshStandardMaterial({
-      color: originalColor,
-    });
+    this.selectedPiece.material = this.selectedPiece.originalMaterial;
     this.selectedPiece = null;
+  }
+
+  getPiecePossibleMoves(piece) {
+    const { name, color, currentPosition } = piece.userData;
+    const [row, col] = currentPosition
+      .substring(1)
+      .split("C")
+      .map(Number)
+      .map((n) => n - 1);
+
+    switch (name) {
+      case "Pawn":
+        return this.getPawnMoves(col, row, color);
+      case "Rook":
+        return this.getRookMoves(col, row);
+      case "Knight":
+        return this.getKnightMoves(col, row);
+      case "Bishop":
+        return this.getBishopMoves(col, row);
+      case "Queen":
+        return this.getQueenMoves(col, row);
+      case "King":
+        return this.getKingMoves(col, row);
+      default:
+        return [];
+    }
+  }
+
+  getPawnMoves(col, row, color) {
+    const moves = [];
+    const direction = color === "W" ? 1 : -1;
+
+    if (
+      this.isWithinBounds(col, row + direction) &&
+      !this.isOccupied(col, row + direction)
+    ) {
+      moves.push(this.getSquareId(col, row + direction));
+
+      if ((color === "W" && row === 1) || (color === "B" && row === 6)) {
+        if (
+          this.isWithinBounds(col, row + 2 * direction) &&
+          !this.isOccupied(col, row + 2 * direction)
+        ) {
+          moves.push(this.getSquareId(col, row + 2 * direction));
+        }
+      }
+    }
+
+    if (
+      this.isWithinBounds(col - 1, row + direction) &&
+      this.isEnemyOccupied(col - 1, row + direction, color)
+    ) {
+      moves.push(this.getSquareId(col - 1, row + direction));
+    }
+    if (
+      this.isWithinBounds(col + 1, row + direction) &&
+      this.isEnemyOccupied(col + 1, row + direction, color)
+    ) {
+      moves.push(this.getSquareId(col + 1, row + direction));
+    }
+
+    return moves;
+  }
+
+  getRookMoves(col, row) {
+    return [
+      ...this.getLineMoves(col, row, 1, 0),
+      ...this.getLineMoves(col, row, -1, 0),
+      ...this.getLineMoves(col, row, 0, 1),
+      ...this.getLineMoves(col, row, 0, -1),
+    ];
+  }
+
+  getKnightMoves(col, row) {
+    const moves = [];
+    const offsets = [
+      [2, 1],
+      [2, -1],
+      [-2, 1],
+      [-2, -1],
+      [1, 2],
+      [1, -2],
+      [-1, 2],
+      [-1, -2],
+    ];
+
+    offsets.forEach(([dc, dr]) => {
+      if (
+        this.isWithinBounds(col + dc, row + dr) &&
+        !this.isOccupiedByFriend(col + dc, row + dr)
+      ) {
+        moves.push(this.getSquareId(col + dc, row + dr));
+      }
+    });
+
+    return moves;
+  }
+
+  getBishopMoves(col, row) {
+    return [
+      ...this.getLineMoves(col, row, 1, 1),
+      ...this.getLineMoves(col, row, -1, 1),
+      ...this.getLineMoves(col, row, 1, -1),
+      ...this.getLineMoves(col, row, -1, -1),
+    ];
+  }
+
+  getQueenMoves(col, row) {
+    return [...this.getRookMoves(col, row), ...this.getBishopMoves(col, row)];
+  }
+
+  getKingMoves(col, row) {
+    const moves = [];
+    const offsets = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ];
+
+    offsets.forEach(([dc, dr]) => {
+      if (
+        this.isWithinBounds(col + dc, row + dr) &&
+        !this.isOccupiedByFriend(col + dc, row + dr)
+      ) {
+        moves.push(this.getSquareId(col + dc, row + dr));
+      }
+    });
+
+    return moves;
+  }
+
+  getLineMoves(col, row, dCol, dRow) {
+    const moves = [];
+    let c = col + dCol;
+    let r = row + dRow;
+
+    while (this.isWithinBounds(c, r) && !this.isOccupied(c, r)) {
+      moves.push(this.getSquareId(c, r));
+      c += dCol;
+      r += dRow;
+    }
+
+    if (
+      this.isWithinBounds(c, r) &&
+      this.isEnemyOccupied(c, r, this.selectedPiece.userData.color)
+    ) {
+      moves.push(this.getSquareId(c, r));
+    }
+
+    return moves;
+  }
+
+  isWithinBounds(col, row) {
+    return col >= 0 && col < 8 && row >= 0 && row < 8;
+  }
+
+  isOccupied(col, row) {
+    const squareId = this.getSquareId(col, row);
+    const piece = this.findPieceOnSquare(squareId);
+    return piece !== false;
+  }
+
+  isOccupiedByFriend(col, row) {
+    const squareId = this.getSquareId(col, row);
+    const piece = this.findPieceOnSquare(squareId);
+    return piece && piece.userData.color === this.selectedPiece.userData.color;
+  }
+
+  isEnemyOccupied(col, row, color) {
+    const squareId = this.getSquareId(col, row);
+    const piece = this.findPieceOnSquare(squareId);
+    return piece && piece.userData.color !== color;
+  }
+
+  highlightPossibleMoves(moves) {
+    moves.forEach((move) => {
+      const square = this.getSquareById(move);
+      if (square) {
+        square.originalColor = square.material.color.getHex();
+        square.material.color.setHex(0x90ee90);
+        square.originalMaterial = square.material;
+        square.material = gradientMaterial;
+      }
+    });
+  }
+
+  revertHighlight(moves) {
+    moves.forEach((move) => {
+      const square = this.getSquareById(move);
+      if (square && square.originalColor) {
+        square.material = square.originalMaterial;
+        square.material.color.setHex(square.originalColor);
+      }
+    });
   }
 
   onWindowResize() {
