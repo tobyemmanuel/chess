@@ -44,14 +44,8 @@ class mainClass
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($passcode, $user['passcode'])) {
-            // session_set_cookie_params([
-                // 'lifetime' => 1800,
-                //     'httponly' => true,
-                //     'secure' => true
-            // ]);
-            // session_start();
-            $_SESSION['user_id'] = $user['user_id'];
-            $avatar =  (!is_null($user['avatar'])) ? 'uploads/'.$user['avatar'] : NULL;
+            $this->sessions($user['user_id']);
+            $avatar = (!is_null($user['avatar'])) ? 'uploads/' . $user['avatar'] : NULL;
             return ["success" => true, "message" => "Logged in successfully.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
         }
         return ["success" => false, "message" => "Wrong username or password."];
@@ -65,12 +59,13 @@ class mainClass
             $stmt = $this->conn->prepare("SELECT * FROM players WHERE user_id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            // $checkSession = $this->checkSession($user['user_id']);
+
             if ($user) {
-                $avatar =  (!is_null($user['avatar'])) ? 'uploads/'.$user['avatar'] : NULL;
+                $avatar = (!is_null($user['avatar'])) ? 'uploads/' . $user['avatar'] : NULL;
                 return ["success" => true, "message" => "Logged in.", "data" => ["email" => $user['email'], "username" => $user['username'], "avatar" => $avatar]];
             }
-        }
-        ;
+        };
 
         return ["success" => false, "message" => "Not Logged In."];
     }
@@ -103,6 +98,48 @@ class mainClass
         session_unset();
         session_destroy();
         return ["success" => true, "message" => "Logged out successfully."];
+    }
+
+    public function sessions($user): bool
+    {
+        $session_id = hash('md5', rand(1000, 9999) . $user . time());
+        $expires_at = date('Y-m-d H:i:s', strtotime('+' . SESSION_LIFETIME . 'minutes'));
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+        $_SESSION['user_id'] = $user;
+        $_SESSION['ip'] = $user_ip;
+        $_SESSION['user_agent'] = $user_agent;
+        $_SESSION['session_id'] = $session_id;
+        $_SESSION['expires_at'] = $expires_at;
+
+        // $stmt = $this->conn->prepare("UPDATE player_sessions SET session_status = ? WHERE player_id = ?");
+        // $stmt->execute([false, $user]);
+
+        // $stmtSession = $this->conn->prepare("INSERT INTO player_sessions (player_id, session_id, user_ip, user_agent, expires_at, session_status) VALUES (?, ?, ?, ?, ?, ?)");
+        // $stmtSession->execute([$user, $session_id, $user_ip, $user_agent, $expires_at, true]);
+
+        return true;
+    }
+
+    public function checkSession($user): bool
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM player_sessions WHERE player_id = ?");
+        $stmt->execute([$user]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+        if (!$user || $user['user_ip'] !== $user_ip || $user['user_agent'] !== $user_agent || time() > strtotime($user['expires_at'])) {
+
+            $stmt = $this->conn->prepare("UPDATE player_sessions SET session_status = ? WHERE player_id = ?");
+            $stmt->execute([false, $user]);
+            
+            session_unset();
+            session_destroy();
+            return false;
+        }
+
+        return true;
     }
 
     public function gen_uuid(): string

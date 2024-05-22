@@ -17,3 +17,4 @@ define('MAIL_PORT', $_ENV['MAIL_PORT']);
 define('MAIL_USER', $_ENV['MAIL_USER']);
 define('MAIL_PASS', $_ENV['MAIL_PASS']);
 define('MAIL_NAME', $_ENV['MAIL_NAME']);
+define('SESSION_LIFETIME', $_ENV['SESSION_LIFETIME']);

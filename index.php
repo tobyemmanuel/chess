@@ -24,6 +24,11 @@
         <div class="loading-text">Please wait</div>
     </div>
 
+    <div class="loading-screen" id="gameLoader">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="gameLoaderDetails">Please wait</div>
+    </div>
+
     <div id="splashScreen" class="screen">
         <!-- Splash screen content -->
         <h1>3DChess Pro</h1>

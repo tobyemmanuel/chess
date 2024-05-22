@@ -8,7 +8,8 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 require_once 'classes/autoload.php';
 request::getRequestData();
 session_set_cookie_params([
-    'lifetime' => 1800,
+    'lifetime' => $_ENV['SESSION_LIFETIME'] ?? 1800,
+    'samesite' => 'Strict',
     //     'httponly' => true,
     //     'secure' => true
 ]);

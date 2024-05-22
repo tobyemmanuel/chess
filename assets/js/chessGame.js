@@ -5,9 +5,10 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 export class chessGame {
   // gameId, players, settings, gameData = null
   constructor(gameData) {
-    console.log("gameData: " + JSON.stringify(gameData));
+    // console.log("gameData: " + JSON.stringify(gameData));
     this.container = document.getElementById("gameContainer");
-
+    this.gameLoader = document.getElementById("gameLoader");
+    this.gameLoaderDetails = document.getElementById("gameLoaderDetails");
     this.camera = null;
     this.scene = null;
     this.renderer = null;
@@ -25,6 +26,7 @@ export class chessGame {
     this.targetRotation = 0;
     this.rotationSpeed = (Math.PI / 180) * 2;
     this.chessPieceType = "set1";
+    this.loadingProgress = 0;
 
     this.init();
     this.render();
@@ -32,6 +34,7 @@ export class chessGame {
   }
 
   init() {
+    this.gameLoader.style.display = "flex";
     this.initCamera();
     this.initScene();
     this.initRenderer();
@@ -41,6 +44,7 @@ export class chessGame {
   }
 
   initCamera() {
+    this.gameLoaderDetails.innerHTML = "Arranging cameras";
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
@@ -52,6 +56,7 @@ export class chessGame {
   }
 
   initScene() {
+    this.gameLoaderDetails.innerHTML = "Setting the Scene";
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xffffff);
 
@@ -64,6 +69,7 @@ export class chessGame {
   }
 
   initRenderer() {
+    this.gameLoaderDetails.innerHTML = "Preparing the renderer";
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -75,6 +81,8 @@ export class chessGame {
 
   render() {
     this.renderer.render(this.scene, this.camera);
+    this.gameLoader.style.display = "none";
+    this.gameLoaderDetails.innerHTML = "Loading complete";
   }
 
   animate() {
@@ -103,6 +111,7 @@ export class chessGame {
   }
 
   createChessboard() {
+    this.gameLoaderDetails.innerHTML = "Generating the chessboard";
     this.chessboard = new THREE.Group();
 
     for (let row = 0; row < this.boardSize; row++) {
@@ -154,6 +163,7 @@ export class chessGame {
   }
 
   createBezels() {
+    this.gameLoaderDetails.innerHTML = "Still generating the chessboard";
     const bezelHeight = 2;
     const bezelThickness = 2;
     const bezelMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
@@ -220,6 +230,9 @@ export class chessGame {
   }
 
   loadPieces() {
+    const totalPieces = 32;
+    let loadedPieces = 0;
+    this.gameLoaderDetails.innerHTML = "Positioning the chess pieces";
     const loader = new GLTFLoader().setPath(
       `assets/models/${this.chessPieceType}/`
     );
@@ -335,21 +348,40 @@ export class chessGame {
     ];
 
     pieceConfigs.forEach((config) => {
-      console.log(config);
       config.positions.forEach((pos, index) => {
+        let pieceName = config.name == "Knight" ? "NKnight" : config.name;
         this.loadChessPiece(
           loader,
           config.filePath,
           pos[0],
           pos[1],
-          `${config.color}${config.name[0]}${index + 1}`,
-          config.name
+          `${config.color}${pieceName[0]}${index + 1}`,
+          config.name,
+          () => {
+            loadedPieces++;
+            this.updateLoaderDetails(loadedPieces, totalPieces);
+          }
         );
       });
     });
   }
 
-  loadChessPiece(loader, filePath, col, row, generatedName, name) {
+  updateLoaderDetails(loadedPieces, totalPieces) {
+    this.gameLoaderDetails.innerHTML = `Loaded ${loadedPieces} of ${totalPieces} pieces`;
+    if (loadedPieces === totalPieces) {
+      this.gameLoaderDetails.innerHTML = "All pieces loaded!";
+    }
+  }
+
+  loadChessPiece(
+    loader,
+    filePath,
+    col,
+    row,
+    generatedName,
+    name,
+    onLoadCallback
+  ) {
     loader.load(
       filePath,
       (gltf) => {
@@ -377,6 +409,7 @@ export class chessGame {
         this.chessPieces[generatedName] = piece;
         this.placePieceOnSquare(piece, this.getSquareId(col, row));
         this.chessboard.add(piece);
+        if (onLoadCallback) onLoadCallback();
       },
       undefined,
       (error) => {
@@ -402,20 +435,153 @@ export class chessGame {
     return this.chessboard.children.find((square) => square.name === squareId);
   }
 
-  placePieceOnSquare(piece, squareId) {
+  placePieceOnSquare(piece, squareId, update = false) {
     const targetSquare = this.getSquareById(squareId);
     targetSquare.userData.occupant = piece.userData;
+    if (update) {
+      this.chessPieces[piece.name].userData.currentPosition = targetSquare.name;
+    }
   }
 
   getSquareId(col, row) {
     return `R${row + 1}C${col + 1}`;
   }
 
+  findPieceOnSquare(square) {
+    const piecesArray = Object.values(this.chessPieces);
+    for (const onePiece of piecesArray) {
+      if (onePiece.userData.currentPosition == square) {
+        return onePiece;
+      }
+    }
+    return false;
+  }
+
+  movePiece(piece, targetSquareData) {
+    const targetSquare = this.getSquareById(targetSquareData.id);
+    const pieceOnSquare = this.findPieceOnSquare(targetSquare.name);
+
+    if (pieceOnSquare && piece.userData.color != pieceOnSquare.userData.color) {
+      this.capturePiece(targetSquare.userData.occupant);
+    }
+    //targetSquare.userData.occupant
+
+    if (
+      pieceOnSquare == false ||
+      piece.userData.color != pieceOnSquare.userData.color
+    ) {
+      piece.position.set(
+        targetSquareData.middlePoint.x,
+        this.boardHeight,
+        targetSquareData.middlePoint.z
+      );
+
+      this.placePieceOnSquare(piece, targetSquareData.id, true);
+      this.revertPieceColor();
+      this.selectedPiece = null;
+    }
+  }
+
+  capturePiece(piece) {
+    const pieceObject = this.chessPieces[piece.id];
+    this.chessboard.remove(pieceObject);
+    delete this.chessPieces[piece.id];
+    this.eliminatedPieces.push(pieceObject);
+  }
+
   addEventListeners() {
+    this.gameLoaderDetails.innerHTML = "Almost there...";
+    document.addEventListener("click", this.onMouseClick.bind(this), false);
     window.addEventListener("resize", this.onWindowResize.bind(this), false);
     document
       .getElementById("rotateBoard")
       .addEventListener("click", this.rotateBoard.bind(this), false);
+  }
+
+  onMouseClick(event) {
+    event.preventDefault();
+
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const intersects = this.raycaster.intersectObjects(
+      this.chessboard.children,
+      true
+    );
+
+    if (intersects.length > 0) {
+      const intersectedObject = intersects[0].object;
+      const userData = intersectedObject.userData;
+
+      if (userData.type === "piece") {
+        this.handlePieceClick(intersectedObject);
+      } else if (userData.type === "square") {
+        // if (this.selectedPiece) {
+        this.handleSquareClick(userData);
+        // }
+      }
+    }
+  }
+
+  handlePieceClick(piece) {
+    if (this.selectedPiece == null) {
+      this.selectPiece(piece);
+    } else if (this.selectedPiece == piece) {
+      this.deselectPiece();
+    } else {
+      this.changeSelectedPiece(piece);
+    }
+  }
+
+  handleSquareClick(squareData) {
+    const pieceOnSquare = this.findPieceOnSquare(squareData.id);
+
+    if (pieceOnSquare && this.selectedPiece == null) {
+      this.selectPiece(pieceOnSquare);
+    } else if (pieceOnSquare && this.selectedPiece == pieceOnSquare) {
+      this.deselectPiece();
+    } else if (
+      pieceOnSquare &&
+      this.selectedPiece.userData.color == pieceOnSquare.userData.color
+    ) {
+      this.changeSelectedPiece(pieceOnSquare);
+    } else if (this.selectedPiece) {
+      toast("e chop am", "success");
+      this.movePiece(this.selectedPiece, squareData);
+    }
+  }
+
+  selectPiece(piece) {
+    this.selectedPiece = piece;
+    this.selectedPiece.material = new THREE.MeshStandardMaterial({
+      color: 0xefe4b0,
+    });
+  }
+
+  deselectPiece() {
+    this.revertPieceColor();
+    this.selectedPiece = null;
+  }
+
+  changeSelectedPiece(piece) {
+    piece.material = new THREE.MeshStandardMaterial({ color: 0xefe4b0 });
+    this.revertPieceColor();
+    this.selectedPiece = piece;
+  }
+
+  revertPieceColor() {
+    // console.log("revertPieceColor", this.selectedPiece);
+
+    // I will load up initial material state of chess piece into a object upon init for future reference
+    // this.selectedPiece.material = this.selectedPiece.originalMaterial;
+    let originalColor =
+      this.selectedPiece.userData.color === "W" ? 0xffffff : 0x000000;
+    this.selectedPiece.material = new THREE.MeshStandardMaterial({
+      color: originalColor,
+    });
+    this.selectedPiece = null;
   }
 
   onWindowResize() {
