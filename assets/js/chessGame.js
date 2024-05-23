@@ -47,7 +47,25 @@ export class chessGame {
     this.rotationSpeed = (Math.PI / 180) * 2;
     this.chessPieceType = "set1";
     this.loadingProgress = 0;
+    this.canNotCastle = {
+      whiteKing: false,
+      blackKing: false,
+      whiteRooks: [false, false],
+      blackRooks: [false, false],
+    };
+    this.enPassantTarget = null;
+    this.pawnToPromote = null;
+    this.promotionTargetSquareId = null;
+    this.promotedPieces = [];
+    this.extraPieces = {
+      Rook: [0, 0],
+      Knight: [0, 0],
+      Bishop: [0, 0],
+      Queen: [0, 0],
+    };
+    this.highlightedPossibleMoves = [];
 
+    //get started
     this.init();
     this.render();
     this.animate();
@@ -71,7 +89,7 @@ export class chessGame {
       0.1,
       1000
     );
-    this.camera.position.set(0, 50, 55);
+    this.camera.position.set(0, 60, 55);
     this.camera.lookAt(0, -5, 0);
   }
 
@@ -425,6 +443,7 @@ export class chessGame {
             node.userData = piece.userData;
           }
         });
+        piece.originalMaterial = piece.material;
 
         this.chessPieces[generatedName] = piece;
         this.placePieceOnSquare(piece, this.getSquareId(col, row));
@@ -488,13 +507,14 @@ export class chessGame {
   checkValidMoves(targetSquareId, possibleMoves) {
     return possibleMoves.includes(targetSquareId);
   }
+
   movePiece(piece, targetSquareData) {
     console.log("move piece", targetSquareData);
     const targetSquare = this.getSquareById(targetSquareData.id);
     const pieceOnSquare = this.findPieceOnSquare(targetSquare.name);
 
     let action = false;
-    const possibleMoves = this.getPiecePossibleMoves(this.selectedPiece);
+    const possibleMoves = this.highlightedPossibleMoves;
     const checkValidMoves = this.checkValidMoves(
       targetSquareData.id,
       possibleMoves
@@ -507,9 +527,34 @@ export class chessGame {
         piece.userData.color != pieceOnSquare.userData.color
       ) {
         this.capturePiece(pieceOnSquare.userData);
-        toast("e chop person " + pieceOnSquare.userData.name, "success");
-        // this.capturePiece(targetSquare.userData.occupant);
+        toast("Captured " + pieceOnSquare.userData.name, "success");
         action = true;
+      }
+
+      if (
+        action == false &&
+        this.selectedPiece.userData.name === "King" &&
+        Math.abs(
+          parseInt(this.selectedPiece.userData.currentPosition.charAt(3)) -
+            parseInt(targetSquareData.id.charAt(3))
+        ) === 2
+      ) {
+        this.handleCastlingMove(this.selectedPiece, targetSquareData);
+        action = true;
+      }
+
+      if (this.selectedPiece.userData.name === "Pawn" && this.enPassantTarget) {
+        const [enPassantCol, enPassantRow] = this.enPassantTarget
+          .substring(1)
+          .split("C")
+          .map(Number)
+          .map((n) => n - 1);
+        if (
+          targetSquareData.id === this.getSquareId(enPassantRow, enPassantCol)
+        ) {
+          this.handleEnPassantCapture(enPassantRow, enPassantCol);
+          action = true;
+        }
       }
 
       if (
@@ -519,29 +564,66 @@ export class chessGame {
         (action == false &&
           piece.userData.color != pieceOnSquare.userData.color)
       ) {
-        toast(
-          "e no chop anything, na just movement to " + targetSquareData.id,
-          "success"
-        );
+        toast("Moved to " + targetSquareData.id, "success");
         action = true;
       }
     } else {
-      toast("Dey play", "error");
+      toast("Invalid move", "error");
     }
+
+    if (this.selectedPiece.userData.name === "Pawn") {
+      let targetRow = parseInt(targetSquareData.id.charAt(1)) - 1;
+      this.enPassantListener(targetRow);
+      if (
+        (piece.userData.color === "W" && targetRow === 7) ||
+        (piece.userData.color === "B" && targetRow === 0)
+      ) {
+        this.promotePawn(piece, targetSquareData.id);
+        return; // Exit the function to wait for promotion choice
+      }
+    }
+
     if (action == true) {
       piece.position.set(
         targetSquareData.middlePoint.x,
         this.boardHeight,
         targetSquareData.middlePoint.z
       );
-      this.revertHighlight(possibleMoves);
-      playKnockSound();
-      this.placePieceOnSquare(piece, targetSquareData.id, true);
-      this.revertPieceColor();
-      this.selectedPiece = null;
+
+      this.postMoveActions(piece, targetSquareData.id);
+      // this.revertHighlight(possibleMoves);
+      // playKnockSound();
+      // this.placePieceOnSquare(piece, targetSquareData.id, true);
+      // this.revertPieceColor();
+      // this.selectedPiece = null;
     }
   }
 
+  postMoveActions(piece, targetSquareDataId = null, postPromotion = false) {
+    this.revertHighlight();
+    playKnockSound();
+    if (!postPromotion) {
+      this.placePieceOnSquare(piece, targetSquareDataId, true);
+      this.revertPieceColor();
+    }
+    this.selectedPiece = null;
+  }
+
+  enPassantListener(targetRow) {
+    const [startRow, startCol] = this.selectedPiece.userData.currentPosition
+      .substring(1)
+      .split("C")
+      .map(Number)
+      .map((n) => n - 1);
+    if (Math.abs(targetRow - startRow) === 2) {
+      this.enPassantTarget = this.getSquareId(
+        startCol,
+        (startRow + targetRow) / 2
+      );
+    } else {
+      this.enPassantTarget = null;
+    }
+  }
   capturePiece(piece) {
     const pieceObject = this.chessPieces[piece.id];
     this.chessboard.remove(pieceObject);
@@ -574,7 +656,7 @@ export class chessGame {
     if (intersects.length > 0) {
       const intersectedObject = intersects[0].object;
       const userData = intersectedObject.userData;
-
+      console.log("finding out why new piece is not selected", intersectedObject);
       if (userData.type === "piece") {
         this.handlePieceClick(intersectedObject);
       } else if (userData.type === "square") {
@@ -586,18 +668,18 @@ export class chessGame {
   handlePieceClick(piece) {
     if (this.selectedPiece == null) {
       this.selectPiece(piece);
-      let possibleMoves = this.getPiecePossibleMoves(piece);
-      this.highlightPossibleMoves(possibleMoves);
+      // let possibleMoves = this.getPiecePossibleMoves(piece);
+      this.highlightPossibleMoves();
     } else if (this.selectedPiece == piece) {
-      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
-      this.revertHighlight(previousMoves);
+      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight();
       this.deselectPiece();
     } else if (this.selectedPiece.userData.color == piece.userData.color) {
-      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
-      this.revertHighlight(previousMoves);
+      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight();
       this.changeSelectedPiece(piece);
-      let possibleMoves = this.getPiecePossibleMoves(piece);
-      this.highlightPossibleMoves(possibleMoves);
+      // let possibleMoves = this.getPiecePossibleMoves(piece);
+      this.highlightPossibleMoves();
     } else {
       let squarePiece = this.findPieceSquare(piece);
       let squareData = this.getSquareById(squarePiece);
@@ -610,21 +692,21 @@ export class chessGame {
 
     if (pieceOnSquare && this.selectedPiece == null) {
       this.selectPiece(pieceOnSquare);
-      let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
-      this.highlightPossibleMoves(possibleMoves);
+      // let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
+      this.highlightPossibleMoves();
     } else if (pieceOnSquare && this.selectedPiece == pieceOnSquare) {
-      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
-      this.revertHighlight(previousMoves);
+      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight();
       this.deselectPiece();
     } else if (
       pieceOnSquare &&
       this.selectedPiece.userData.color == pieceOnSquare.userData.color
     ) {
-      const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
-      this.revertHighlight(previousMoves);
+      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
+      this.revertHighlight();
       this.changeSelectedPiece(pieceOnSquare);
-      let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
-      this.highlightPossibleMoves(possibleMoves);
+      // let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
+      this.highlightPossibleMoves();
     } else if (this.selectedPiece) {
       this.movePiece(this.selectedPiece, squareData);
     }
@@ -677,7 +759,7 @@ export class chessGame {
       case "Queen":
         return this.getQueenMoves(col, row);
       case "King":
-        return this.getKingMoves(col, row);
+        return this.getKingMoves(col, row, color);
       default:
         return [];
     }
@@ -699,6 +781,7 @@ export class chessGame {
           !this.isOccupied(col, row + 2 * direction)
         ) {
           moves.push(this.getSquareId(col, row + 2 * direction));
+          this.enPassantTarget = this.getSquareId(col, row + direction);
         }
       }
     }
@@ -714,6 +797,30 @@ export class chessGame {
       this.isEnemyOccupied(col + 1, row + direction, color)
     ) {
       moves.push(this.getSquareId(col + 1, row + direction));
+    }
+
+    if (this.enPassantTarget) {
+      const [enPassantRow, enPassantCol] = this.enPassantTarget
+        .substring(1)
+        .split("C")
+        .map(Number)
+        .map((n) => n - 1);
+
+      console.log(
+        "check error 6",
+        enPassantCol,
+        enPassantRow,
+        col,
+        row,
+        direction
+      );
+      if (
+        (col - 1 === enPassantCol || col + 1 === enPassantCol) &&
+        row + direction === enPassantRow
+      ) {
+        console.log("pass moves", this.enPassantTarget);
+        moves.push(this.getSquareId(enPassantCol, enPassantRow));
+      }
     }
 
     return moves;
@@ -766,7 +873,7 @@ export class chessGame {
     return [...this.getRookMoves(col, row), ...this.getBishopMoves(col, row)];
   }
 
-  getKingMoves(col, row) {
+  getKingMoves(col, row, color) {
     const moves = [];
     const offsets = [
       [1, 0],
@@ -788,7 +895,43 @@ export class chessGame {
       }
     });
 
+    if (color === "W" && !this.canNotCastle.whiteKing) {
+      if (
+        !this.canNotCastle.whiteRooks[0] &&
+        this.checkCastlingObstruction(col, row, -1)
+      ) {
+        moves.push(this.getSquareId(col - 2, row));
+      }
+      if (
+        !this.canNotCastle.whiteRooks[1] &&
+        this.checkCastlingObstruction(col, row, 1)
+      ) {
+        moves.push(this.getSquareId(col + 2, row));
+      }
+    } else if (color === "B" && !this.canNotCastle.blackKing) {
+      if (
+        !this.canNotCastle.blackRooks[0] &&
+        this.checkCastlingObstruction(col, row, -1)
+      ) {
+        moves.push(this.getSquareId(col - 2, row));
+      }
+      if (
+        !this.canNotCastle.blackRooks[1] &&
+        this.checkCastlingObstruction(col, row, 1)
+      ) {
+        moves.push(this.getSquareId(col + 2, row));
+      }
+    }
+
     return moves;
+  }
+
+  checkCastlingObstruction(col, row, direction) {
+    const step = direction > 0 ? 1 : -1;
+    for (let i = 1; i <= 2; i++) {
+      if (this.isOccupied(col + i * step, row)) return false;
+    }
+    return true;
   }
 
   getLineMoves(col, row, dCol, dRow) {
@@ -834,7 +977,8 @@ export class chessGame {
     return piece && piece.userData.color !== color;
   }
 
-  highlightPossibleMoves(moves) {
+  highlightPossibleMoves(moves = null) {
+    moves = this.getPiecePossibleMoves(this.selectedPiece);
     moves.forEach((move) => {
       const square = this.getSquareById(move);
       if (square) {
@@ -844,9 +988,11 @@ export class chessGame {
         square.material = gradientMaterial;
       }
     });
+    this.highlightedPossibleMoves = moves;
   }
 
   revertHighlight(moves) {
+    moves = this.highlightedPossibleMoves;
     moves.forEach((move) => {
       const square = this.getSquareById(move);
       if (square && square.originalColor) {
@@ -854,6 +1000,172 @@ export class chessGame {
         square.material.color.setHex(square.originalColor);
       }
     });
+    this.highlightedPossibleMoves = [];
+  }
+
+  handleCastlingMove(king, targetSquareData) {
+    const targetCol = parseInt(targetSquareData.id.charAt(3)) - 1;
+    const row = parseInt(king.userData.currentPosition.charAt(1)) - 1;
+    const rookCol = targetCol === 6 ? 7 : 0;
+    const newRookCol = targetCol === 6 ? 5 : 3;
+
+    const rookId = this.getSquareId(rookCol, row);
+    const newRookId = this.getSquareId(newRookCol, row);
+    const rook = this.findPieceOnSquare(rookId);
+    const targetSquareDataForRook = this.getSquareById(newRookId);
+    if (rook) {
+      rook.position.set(
+        targetSquareDataForRook.userData.middlePoint.x,
+        this.boardHeight,
+        targetSquareDataForRook.userData.middlePoint.z
+      );
+      this.placePieceOnSquare(rook, newRookId, true);
+    }
+
+    if (king.userData.color === "W") {
+      this.canNotCastle.whiteKing = true;
+      this.canNotCastle.whiteRooks[targetCol === 6 ? 1 : 0] = true;
+    } else {
+      this.canNotCastle.blackKing = true;
+      this.canNotCastle.blackRooks[targetCol === 6 ? 1 : 0] = true;
+    }
+  }
+
+  handleEnPassantCapture(row, col) {
+    console.log("debug", this.enPassantTarget);
+    const capturedPawnId = this.getSquareId(
+      row,
+      col - (this.selectedPiece.userData.color === "W" ? 1 : -1)
+    );
+    const capturedPawn = this.findPieceOnSquare(capturedPawnId);
+    if (capturedPawn) {
+      this.capturePiece(capturedPawn.userData);
+    }
+  }
+
+  promotePawn(pawn, targetSquareId) {
+    const promotionScreen = document.getElementById("promotionScreen");
+    promotionScreen.style.display = "block";
+    console.log("targetSquareId: ", targetSquareId);
+    this.pawnToPromote = pawn;
+    this.promotionTargetSquareId = targetSquareId;
+
+    document.getElementById("PromoteToQueen").onclick = () =>
+      this.completePromotion("Queen");
+    document.getElementById("PromoteToRook").onclick = () =>
+      this.completePromotion("Rook");
+    document.getElementById("PromoteToBishop").onclick = () =>
+      this.completePromotion("Bishop");
+    document.getElementById("PromoteToKnight").onclick = () =>
+      this.completePromotion("Knight");
+  }
+
+  completePromotion(pieceType) {
+    const pawn = this.pawnToPromote;
+    const targetSquareId = this.promotionTargetSquareId;
+    const color = pawn.userData.color;
+
+    // Remove the promotion screen and pawn
+    document.getElementById("promotionScreen").style.display = "none";
+
+    this.addPiece(color, pieceType, targetSquareId);
+
+    this.removePiece(pawn.userData);
+    this.postMoveActions(pawn, null, true);
+
+    // Clear the stored pawn promotion
+    this.pawnToPromote = null;
+    this.promotionTargetSquareId = null;
+  }
+
+  removePiece(piece) {
+    const pieceObject = this.chessPieces[piece.id];
+    this.chessboard.remove(pieceObject);
+    delete this.chessPieces[piece.id];
+    this.promotedPieces.push(pieceObject);
+  }
+
+  addPiece(color, pieceType, position) {
+    const loader = new GLTFLoader().setPath(
+      `assets/models/${this.chessPieceType}/`
+    );
+    let filePath;
+    let fileNameAppend = color === "W" ? "white" : "black";
+
+    switch (pieceType) {
+      case "Queen":
+        filePath = `queen ${fileNameAppend}.glb`;
+        break;
+      case "Rook":
+        filePath = `rook ${fileNameAppend}.glb`;
+        break;
+      case "Bishop":
+        filePath = `bishop ${fileNameAppend}.glb`;
+        break;
+      case "Knight":
+        filePath = `knight ${fileNameAppend}.glb`;
+        break;
+      default:
+        console.error("Unknown piece type:", pieceType);
+        return;
+    }
+
+    loader.load(
+      filePath,
+      (gltf) => {
+        const piece = gltf.scene.children[0];
+        piece.scale.set(200.0, 200.0, 200.0);
+
+        let pieceName = pieceType == "Knight" ? "NKnight" : pieceType;
+        let initialPieceCount = pieceType == "Queen" ? 1 : 0;
+        let pieceIndexForExtraPieces = color == "W" ? 0 : 1;
+        this.extraPieces[pieceType][pieceIndexForExtraPieces] += 1;
+        let pieceNumberAppend =
+          initialPieceCount +
+          this.extraPieces[pieceType][pieceIndexForExtraPieces];
+        const generatedName = `${color}${pieceName.charAt(
+          0
+        )}${pieceNumberAppend}`;
+
+        piece.name = generatedName;
+        piece.userData = {
+          id: generatedName,
+          name: pieceType,
+          color: pieceType.charAt(0), // Pick First Letter as color
+          currentPosition: position,
+        };
+
+        const targetSquare = this.getSquareById(position);
+        piece.position.set(
+          targetSquare.userData.middlePoint.x,
+          this.boardHeight,
+          targetSquare.userData.middlePoint.z
+        );
+
+        piece.traverse((node) => {
+          if (node.isMesh) {
+            node.visible = true;
+            node.userData = piece.userData;
+          }
+        });
+        piece.originalMaterial = piece.material;
+
+        this.chessPieces[generatedName] = piece;
+        this.placePieceOnSquare(piece, targetSquare.name);
+        this.chessboard.add(piece);
+      },
+      undefined,
+      (error) => {
+        toast(
+          "An error occurred while loading the piece, Please refresh your browser",
+          "error"
+        );
+        console.error(
+          "An error occurred while loading the piece, Please refresh your browser:",
+          error
+        );
+      }
+    );
   }
 
   onWindowResize() {
