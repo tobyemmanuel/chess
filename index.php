@@ -256,6 +256,21 @@
     <div class="gameContainer" id="gameContainer" style="display: none;">
     </div>
 
+    <div id="promotionScreen" class="inGameScreen" style="display: none;">
+        <h2>Promote your pawn to?</h2>
+        <ul>
+            <li><a href="#" id="PromoteToQueen">Queen</a></li>
+            <li><a href="#" id="PromoteToRook">Rook</a></li>
+            <li><a href="#" id="PromoteToBishop">Bishop</a></li>
+            <li><a href="#" id="PromoteToKnight">Knight</a></li>
+        </ul>
+    </div>
+
+    <div id="rulesScreen" class="screen" style="display: none;">
+        <h2>Chess Rules</h2>
+        <p>Rules</p>
+    </div>
+
     <script type="module" src="./assets/js/main.js"></script>
     <script src="./assets/js/utils.js"></script>
     <script type="module" src="./assets/js/chessGame.js"></script>

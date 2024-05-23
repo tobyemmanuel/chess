@@ -55,6 +55,21 @@ body::before {
   background-position: center;
 }
 
+.inGameScreen{
+  position: absolute; /* Ensure it is above the blurred background */
+  z-index: 9999999;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 80%;
+  max-width: 400px;
+  background-image: url("../images/screen.jpeg");
+  background-size: cover;
+  background-position: center;
+}
+
 #splashScreen h1 {
   font-size: 3rem;
   font-family: "Playfair Display", serif;
@@ -73,18 +88,21 @@ body::before {
 }
 
 #mainMenu ul,
-#loggedMenu ul {
+#loggedMenu ul,
+#promotionScreen ul {
   list-style-type: none;
   padding: 20px;
 }
 
 #mainMenu ul li,
-#loggedMenu ul li {
+#loggedMenu ul li,
+#promotionScreen ul li {
   margin-bottom: 10px;
 }
 
 #mainMenu ul li a,
-#loggedMenu ul li a {
+#loggedMenu ul li a,
+#promotionScreen ul li a {
   text-decoration: none;
   color: #333;
   font-weight: bold;
@@ -95,7 +113,8 @@ body::before {
 }
 
 #mainMenu ul li a:hover,
-#loggedMenu ul li a:hover {
+#loggedMenu ul li a:hover,
+#promotionScreen ul li a:hover {
   background-color: #ece2c6;
 }
 
