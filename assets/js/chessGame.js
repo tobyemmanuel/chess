@@ -591,11 +591,6 @@ export class chessGame {
       );
 
       this.postMoveActions(piece, targetSquareData.id);
-      // this.revertHighlight(possibleMoves);
-      // playKnockSound();
-      // this.placePieceOnSquare(piece, targetSquareData.id, true);
-      // this.revertPieceColor();
-      // this.selectedPiece = null;
     }
   }
 
@@ -656,7 +651,6 @@ export class chessGame {
     if (intersects.length > 0) {
       const intersectedObject = intersects[0].object;
       const userData = intersectedObject.userData;
-      console.log("finding out why new piece is not selected", intersectedObject);
       if (userData.type === "piece") {
         this.handlePieceClick(intersectedObject);
       } else if (userData.type === "square") {
@@ -668,17 +662,13 @@ export class chessGame {
   handlePieceClick(piece) {
     if (this.selectedPiece == null) {
       this.selectPiece(piece);
-      // let possibleMoves = this.getPiecePossibleMoves(piece);
       this.highlightPossibleMoves();
     } else if (this.selectedPiece == piece) {
-      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
       this.revertHighlight();
       this.deselectPiece();
     } else if (this.selectedPiece.userData.color == piece.userData.color) {
-      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
       this.revertHighlight();
       this.changeSelectedPiece(piece);
-      // let possibleMoves = this.getPiecePossibleMoves(piece);
       this.highlightPossibleMoves();
     } else {
       let squarePiece = this.findPieceSquare(piece);
@@ -692,20 +682,16 @@ export class chessGame {
 
     if (pieceOnSquare && this.selectedPiece == null) {
       this.selectPiece(pieceOnSquare);
-      // let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
       this.highlightPossibleMoves();
     } else if (pieceOnSquare && this.selectedPiece == pieceOnSquare) {
-      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
       this.revertHighlight();
       this.deselectPiece();
     } else if (
       pieceOnSquare &&
       this.selectedPiece.userData.color == pieceOnSquare.userData.color
     ) {
-      // const previousMoves = this.getPiecePossibleMoves(this.selectedPiece);
       this.revertHighlight();
       this.changeSelectedPiece(pieceOnSquare);
-      // let possibleMoves = this.getPiecePossibleMoves(pieceOnSquare);
       this.highlightPossibleMoves();
     } else if (this.selectedPiece) {
       this.movePiece(this.selectedPiece, squareData);
@@ -1131,7 +1117,8 @@ export class chessGame {
         piece.userData = {
           id: generatedName,
           name: pieceType,
-          color: pieceType.charAt(0), // Pick First Letter as color
+          type: "piece",
+          color: color,
           currentPosition: position,
         };
 
@@ -1167,7 +1154,7 @@ export class chessGame {
       }
     );
   }
-
+  
   onWindowResize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
