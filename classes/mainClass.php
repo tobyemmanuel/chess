@@ -84,9 +84,9 @@ class mainClass
             if ($sendMail[0] == true) {
                 $stmt = $this->conn->prepare("UPDATE players SET passcode = ? WHERE id = ?");
                 $stmt->execute([$passcodeHash, $user['id']]);
-                return ["success" => true, "message" => "Passcode reset email sent"];
+                return ["success" => true, "message" => "Passcode reset email sent $passcode"];
             } else {
-                return ["success" => false, "message" => "Passcode reset unsuccessful. Try again later"];
+                return ["success" => false, "message" => "Passcode reset unsuccessful. Try again later $passcode"];
             }
         }
         return ["success" => false, "message" => "Account does not exist."];

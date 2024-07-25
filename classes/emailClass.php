@@ -2,7 +2,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once "../config.inc.php";
+// require_once "../config.inc.php";
 
 // require 'vendor/autoload.php';
 class emailClass

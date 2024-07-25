@@ -98,7 +98,7 @@
     <div id="forgotPasswordScreen" class="screen" style="display: none;">
         <!-- Logged in menu content -->
         <h2>Enter Account</h2>
-        <form id="continuePlayerForm">
+        <form id="forgotPasswordForm">
             <label for="email/username">Username/Email</label>
             <input type="text" id="username" class="clearfix" name="username" required>
             <p>A new passcode will be sent to your email</p>
@@ -237,9 +237,10 @@
     <div class="floatingRightBar inGameMode" style="display: none;">
         <div class="floatRightBarInfo">
             <div class="icon tooltip tooltip-left" id="rotateBoard" title="Rotate the chessboard"><img src="assets/images/rotate_button.jpg"/></div>
-            <div class="icon tooltip tooltip-left" title = "Your Turn"><img class="pulsate" src="assets/images/white_piece_button.jpg"/></div>
-            <div class="icon tooltip tooltip-left" title = "White's knockouts"><img src="assets/images/white_piece_button.jpg"/><span class="badge">3</span></div>
-            <div class="icon tooltip tooltip-left" title = "Black's knockouts"><img src="assets/images/black_piece_button.jpg"/><span class="badge">3</span></div>
+            <div class="whitePieceTurn icon tooltip tooltip-left" style="display: none;" title = "Your Turn"><img class="pulsate" src="assets/images/white_piece_button.jpg"/></div>
+            <div class="blackPieceTurn icon tooltip tooltip-left" style="display: none;" title = "Opponent Turn"><img class="pulsate" src="assets/images/black_piece_button.jpg"/></div>
+            <div class="icon tooltip tooltip-left" title = "White's knockouts"><img src="assets/images/white_piece_button.jpg"/><span class="whitePieceCount badge">0</span></div>
+            <div class="icon tooltip tooltip-left" title = "Black's knockouts"><img src="assets/images/black_piece_button.jpg"/><span class="blackPieceCount badge">0</span></div>
             <div class="icon tooltip tooltip-left exit" title = "Exit game"><img src="assets/images/exit_button.jpg"/></div>
         </div>
     </div>

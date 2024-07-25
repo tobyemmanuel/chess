@@ -23,7 +23,6 @@ if(!$db) {
     exit;
 }
 
-
 $path = $_GET['path'] ?? "";
 $process = null;
 

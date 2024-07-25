@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("newGame")
     .addEventListener("click", handleNewGameClick);
   document
+    .getElementById("forgotPassword")
+    .addEventListener("click", handleForgotPasswordSelection);forgotPasswordAction
+  document
     .getElementById("createPlayerAction")
     .addEventListener("click", handleCreatePlayerActionClick);
   document
@@ -43,6 +46,9 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("playOptionsAction")
     .addEventListener("click", handlePlayModeSelection);
+  document
+    .getElementById("forgotPasswordAction")
+    .addEventListener("click", handleForgotPasswordAction);
 
   setupClickListener(".back, .back_logged, .exit", handleBackButtonClick);
   setupClickListener(".gameSettings", function () {
@@ -256,6 +262,32 @@ document.addEventListener("DOMContentLoaded", function () {
       function (error) {
         document.getElementById("loading-screen").style.display = "none";
         //toast(error.message, "error");
+      }
+    );
+  }
+
+  function handleForgotPasswordSelection() {
+    hideScreen("continuePlayerScreen");
+    showScreen("forgotPasswordScreen");
+  }
+
+  function handleForgotPasswordAction(event) {
+    event.preventDefault();
+    var formData = new FormData(document.getElementById("forgotPasswordForm"));
+    document.getElementById("loading-screen").style.display = "flex";
+    handleAjaxRequest(
+      "POST",
+      "api.php?path=main&action=forgotpasscode",
+      formData,
+      function (response) {
+        document.getElementById("loading-screen").style.display = "none";
+        toast(response.message, "success");
+        showScreen("continuePlayerScreen");
+        hideScreen("forgotPasswordScreen");
+      },
+      function (error) {
+        toast(error.message, "error");
+        document.getElementById("loading-screen").style.display = "none";
       }
     );
   }

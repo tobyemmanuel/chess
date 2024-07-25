@@ -12,7 +12,6 @@ class request {
         } else {
             // If data is not an array, sanitize it
             $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
-            $data = filter_var($data, FILTER_SANITIZE_STRING);
         }
         return $data;
     }

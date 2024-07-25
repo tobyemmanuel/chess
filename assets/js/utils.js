@@ -5,6 +5,7 @@ function handleAjaxRequest(method, url, data, onSuccess, onError) {
   xhr.onload = function () {
     document.getElementById("loading-screen").style.display = "none";
     if (xhr.status >= 200 && xhr.status < 300) {
+      // console.log(xhr.responseText)
       var response = JSON.parse(xhr.responseText);
       if (response.success) {
         onSuccess(response);
