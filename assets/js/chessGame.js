@@ -685,6 +685,7 @@ export class chessGame {
       this.revertHighlightedSquareColor(this.selectedPiece.userData.currentPosition);
       this.placePieceOnSquare(piece, targetSquareDataId, true);
     }
+
     let opponentColor = this.selectedPiece.userData.color == "W" ? "B" : "W";
 
     //check both kings
@@ -694,6 +695,9 @@ export class chessGame {
     if (!postPromotion) {
       this.revertPieceColor();
     }
+
+    this.checkGameState(piece.userData.color);
+
     //check possinility of checkmate or stalemate
     this.playerTurns(opponentColor)
     this.selectedPiece = null;
@@ -1295,13 +1299,13 @@ export class chessGame {
     );
   }
 
-  isKingInCheck(kingColor, targetSquare = null) {
-    let kingPosition = this.getKingPosition(kingColor);
+  isKingInCheck(kingColor, targetSquare = null, chessPieces = null) {
+    let kingPosition = chessPieces === null ? this.getKingPosition(kingColor) : this.getKingPosition(kingColor, chessPieces);
     if (targetSquare !== null) {
       kingPosition = targetSquare;
     }
     const enemyColor = kingColor === "W" ? "B" : "W";
-    const enemyPieces = this.getAllPiecesOfColor(enemyColor);
+    const enemyPieces = chessPieces === null ? this.getAllPiecesOfColor(enemyColor) : this.getAllPiecesOfColor(enemyColor, chessPieces);
     for (const piece of enemyPieces) {
       const possibleMoves = this.getPiecePossibleMoves(piece);
       if (possibleMoves.includes(kingPosition)) {
@@ -1381,9 +1385,77 @@ export class chessGame {
     return status;
   }
 
-  checkmate() {}
+  isMoveLegal(piece, move, color) {
+    const chessPiecesCopy = this.cloneGameState(this.chessPieces);
+    const pieceId = piece.userData.id;
+    const pieceCopy = chessPiecesCopy[pieceId];
+    this.simulateMove(pieceCopy, move, chessPiecesCopy);
+    return !this.isKingInCheck(color, chessPiecesCopy);
+  }
 
-  stalemate() {}
+  simulateMove(piece, newPosition, chessPieces) {
+    const originalPosition = piece.object.userData.currentPosition;
+    piece.object.userData.currentPosition = newPosition;
+
+    for (const id in chessPieces) {
+      if (chessPieces[id].object.userData.currentPosition === newPosition && chessPieces[id].object.userData !== piece.userData) {
+        delete chessPieces[id]; 
+      }
+    }
+  }
+
+  cloneGameState(chessPieces) {
+    return JSON.parse(JSON.stringify(chessPieces));
+  } 
+
+  checkGameState(color) {
+    const opponentColor = color === 'W' ? 'B' : 'W';
+
+    if (this.checkmate(opponentColor)) {
+      console.log('Checkmate!');
+    } else if (this.stalemate(opponentColor)) {
+      console.log('Stalemate!');
+    }
+  }
+
+  checkmate(color) {
+    if (!this.isKingInCheck(color)) {
+      return false;
+    }
+
+    const playerPieces = this.getAllPiecesOfColor(color);
+
+    for (const piece of playerPieces) {
+      const possibleMoves = this.getPiecePossibleMoves(piece);
+      for (const move of possibleMoves) {
+        console.log('Moved', piece);
+        if (this.isMoveLegal(piece, move, color)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  stalemate(color) {
+    if (this.isKingInCheck(color)) {
+      return false;
+    }
+
+    const playerPieces = this.getAllPiecesOfColor(color);
+
+    for (const piece of playerPieces) {
+      const possibleMoves = this.getPiecePossibleMoves(piece);
+      for (const move of possibleMoves) {
+        console.log('Morved', piece);
+
+        if (this.isMoveLegal(piece, move, color)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
   antiCastlingListener(piece) {
     if (piece.userData.name === "King") {
@@ -1415,9 +1487,10 @@ export class chessGame {
     }
   }
   
-  getKingPosition(color) {
-    for (const pieceId in this.chessPieces) {
-      const piece = this.chessPieces[pieceId];
+  getKingPosition(color, chessPieces = this.chessPieces) {
+    
+    for (const pieceId in chessPieces) {
+      const piece = chessPieces[pieceId];
       if (piece.userData.name === "King" && piece.userData.color === color) {
         return piece.userData.currentPosition;
       }
@@ -1425,8 +1498,8 @@ export class chessGame {
     return null;
   }
 
-  getAllPiecesOfColor(color) {
-    return Object.values(this.chessPieces).filter(
+  getAllPiecesOfColor(color, chessPieces = this.chessPieces) {
+    return Object.values(chessPieces).filter(
       (piece) => piece.userData.color === color
     );
   }
@@ -1451,7 +1524,7 @@ export class chessGame {
         document.getElementById("playerTwo").style.display = "flex";
         this.playerTurn = "playerTwo";
       }else{
-         console.log("something went wrong");
+         toast("Something went wrong. Please refresh your browser", "error");
       }
     }
   }
